@@ -23,7 +23,7 @@ public class NodeManager : MonoBehaviour
     private ComputeShader m_NodeLinkingShader;
 
     //Static variables for use by the whole system
-    private static int m_nodeDistance = 5;
+    private static float m_nodeDistance = 5;
     private static int m_nodeConnectionAmount = 4;
     private static int m_maxNodes = 1000;
 
@@ -46,7 +46,7 @@ public class NodeManager : MonoBehaviour
         m_objectPositions = new List<Vector3>();
         m_nodeGraph = null;
     }
-    public static void ChangeValues(int a_nodeDistance, int a_connectionAmount, int a_maxNodes)
+    public static void ChangeValues(float a_nodeDistance, int a_connectionAmount, int a_maxNodes)
     {
         m_nodeDistance = a_nodeDistance;
         m_nodeConnectionAmount = a_connectionAmount;
@@ -124,7 +124,22 @@ public class NodeManager : MonoBehaviour
                 //if same node goto next
                 if (node1 == node2)
                     continue;
-
+                
+                //Double up check
+                bool hasDupe = false;
+                foreach (var VARIABLE in node2.m_connectedNodes)
+                {
+                    if (VARIABLE == node1)
+                        hasDupe = true;
+                }
+                foreach (var VARIABLE in node1.m_connectedNodes)
+                {
+                    if (VARIABLE == node2)
+                        hasDupe = true;
+                }
+                if (hasDupe)
+                    continue;
+                
                 //if distance between nodes less than set distance then we can add
                 if (Vector3.Distance(node1.m_position, node2.m_position) < m_nodeDistance)
                 {

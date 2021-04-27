@@ -6,7 +6,7 @@ using UnityEditor;
 
 public class NodeGraphWindow : EditorWindow
 {
-    int m_nodeDistance = 5;
+    float m_nodeDistance = 5;
     int m_nodeConnectionAmount = 4;
     int m_maxNodes = 1000;
     //default mask is layer one only 
@@ -27,7 +27,7 @@ public class NodeGraphWindow : EditorWindow
     void OnGUI()
     {
         GUILayout.Label("Node Settings", EditorStyles.boldLabel);
-        m_nodeDistance = EditorGUILayout.IntField("Node Join Distance", m_nodeDistance);
+        m_nodeDistance = EditorGUILayout.FloatField("Node Join Distance", m_nodeDistance);
         m_nodeConnectionAmount = EditorGUILayout.IntField("Max connections", m_nodeConnectionAmount);
         m_maxNodes = EditorGUILayout.IntField("Max nodes",m_maxNodes);
         
