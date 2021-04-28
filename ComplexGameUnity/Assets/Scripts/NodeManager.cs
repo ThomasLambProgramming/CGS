@@ -114,8 +114,7 @@ public class NodeManager : MonoBehaviour
         Debug.Log("CREATION PASSED");
 
     }
-
-    public static void LinkNodes(float a_nodeDistance, bool a_ranOnce = true)
+    public static void LinkNodes(float a_nodeDistance, bool a_firstRun = true)
     {
         if (m_createdNodes == null)
             return;
@@ -143,57 +142,6 @@ public class NodeManager : MonoBehaviour
                 if (hasDupe)
                     continue;
 
-
-                //check if a node is above or below another node
-                if (node1.m_position.x == node2.m_position.x && node1.m_position.z == node2.m_position.z)
-                {
-                    if (node1.m_position.y > node2.m_position.y)
-                    {
-                        foreach(var connection in node2.m_connectedNodes)
-                        {
-                            if (connection == null)
-                                continue;
-                            int index = 0;
-                            foreach(var nodeConnected in connection.m_connectedNodes)
-                            {
-                                if (nodeConnected == null)
-                                    continue;
-                                if (connection.m_connectedNodes[index] == node2)
-                                {
-                                    connection.m_connectedNodes[index] = null;
-                                    m_createdNodes.Remove(node2);
-                                    LinkNodes(a_nodeDistance);
-                                    return;
-                                }
-                                index++;
-                            }
-                        }
-                        
-                    }
-                    else
-                    {
-                        foreach (var connection in node1.m_connectedNodes)
-                        {
-                            if (connection == null)
-                                continue;
-                            int index = 0;
-                            foreach (var nodeConnected in connection.m_connectedNodes)
-                            {
-                                if (nodeConnected == null)
-                                    continue;
-                                if (connection.m_connectedNodes[index] == node1)
-                                {
-                                    connection.m_connectedNodes[index] = null;
-                                    m_createdNodes.Remove(node1);
-                                    LinkNodes(a_nodeDistance);
-                                    return;
-                                }
-                                index++;
-                            }
-                        }
-                    }
-                }
-                
                 //if distance between nodes less than set distance then we can add
                 if (Vector3.Distance(node1.m_position, node2.m_position) < a_nodeDistance
                     && Mathf.Abs(node1.m_position.y - node2.m_position.y) < m_ySpaceLimit)
@@ -203,19 +151,37 @@ public class NodeManager : MonoBehaviour
                     if (node1.m_connectionAmount < m_nodeConnectionAmount &&
                         node2.m_connectionAmount < m_nodeConnectionAmount)
                     {
-                        node1.m_connectedNodes[node1.m_connectionAmount] = node2;
-                        node1.m_connectionAmount++;
-                        node2.m_connectedNodes[node2.m_connectionAmount] = node1;
-                        node2.m_connectionAmount++;
+                        for (int i = 0; i < m_nodeConnectionAmount; i++)
+                        {
+                            if (node1.m_connectedNodes[i] == null)
+                            {
+                                node1.m_connectedNodes[i] = node2;
+                                node1.m_connectionAmount++;
+                                break;
+                            }
+                        }
+
+                        for (int i = 0; i < m_nodeConnectionAmount; i++)
+                        {
+                            if (node2.m_connectedNodes[i] == null)
+                            {
+                                node2.m_connectedNodes[i] = node1;
+                                node2.m_connectionAmount++;
+                                break;
+                            }
+                        }
                     }
                 }
             }
         }
-
-        //Set a double pass to connect properly 
+        //we delete every overlap of nodes on the xz then run the link again
         
-
-
+        if (a_firstRun)
+        {
+            DeleteOverlapNodes();
+            LinkNodes(m_nodeDistance, false);
+            return;
+        }
         //make an array to fit nodes with added redundancy 
         m_nodeGraph = new Node[m_createdNodes.Count];
 
@@ -228,7 +194,6 @@ public class NodeManager : MonoBehaviour
         }
         Debug.Log("LINK PASSED");
     }
-
     //This is a debug option
     public static void DrawNodes()
     {
@@ -244,5 +209,60 @@ public class NodeManager : MonoBehaviour
             }
         }
         Debug.Log("DRAW PASSED");
+    }
+    private static void DeleteOverlapNodes()
+    {
+        foreach (var node1 in m_createdNodes)
+        {
+            foreach (var node2 in m_createdNodes)
+            {
+                if (node1 == node2)
+                    continue;
+
+                if (Mathf.Abs(node1.m_position.x - node2.m_position.x) < 0.1f && Mathf.Abs(node1.m_position.z - node2.m_position.z) < 0.1f)
+                {
+                    if (NodeRemoval(node1, node2))
+                    {
+                        DeleteOverlapNodes();
+                        return;
+                    }
+                    else if (NodeRemoval(node2, node1))
+                    {
+                        DeleteOverlapNodes();
+                        return;
+                    }
+                }
+            }
+        }
+        
+    }
+    private static bool NodeRemoval(Node node1, Node node2)
+    {
+        if (node1.m_position.y > node2.m_position.y)
+        {
+            foreach (var connection in node2.m_connectedNodes)
+            {
+                if (connection == null)
+                    continue;
+               
+
+                for(int i = 0; i < m_nodeConnectionAmount; i++)
+                {
+                    if (connection.m_connectedNodes[i] == null)
+                        continue;
+
+                    if (connection.m_connectedNodes[i] == node2)
+                    {
+                        connection.m_connectedNodes[i] = null;
+                        connection.m_connectionAmount--;
+                        break;
+                    }
+                    
+                }
+            }
+            m_createdNodes.Remove(node2);
+            return true;
+        }
+        return false;
     }
 }
