@@ -6,8 +6,8 @@ using UnityEditor;
 
 public class NodeGraphWindow : EditorWindow
 {
-    float m_nodeDistance = 5;
-    int m_nodeConnectionAmount = 4;
+    float m_nodeDistance = 1.6f;
+    int m_nodeConnectionAmount = 16;
     int m_maxNodes = 1000;
     float m_ySpaceLimit = 1;
     //default mask is layer one only 

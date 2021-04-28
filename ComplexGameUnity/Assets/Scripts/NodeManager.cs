@@ -10,10 +10,12 @@ public class Node
     public Node[] m_connectedNodes = null;
     public Vector3 m_position = new Vector3(0,0,0);
     public int m_connectionAmount = 0;
-    public Node(int a_nodeConnectionLimit, Vector3 a_position)
+    public Vector3 m_normal = new Vector3(0, 0, 0);
+    public Node(int a_nodeConnectionLimit, Vector3 a_position, Vector3 a_normal)
     {
         m_position = a_position;
         m_connectedNodes = new Node[a_nodeConnectionLimit];
+        m_normal = a_normal;
         m_connectionAmount = 0;
     }
 }
@@ -92,6 +94,7 @@ public class NodeManager : MonoBehaviour
                         vert.y * currentObject.transform.localScale.y,
                         vert.z * currentObject.transform.localScale.z);
                     Vector3 vertWorldPos = currentObject.transform.TransformPoint(vertScale);
+                    Vector3 newNormal = currentObject.transform.TransformDirection(new Vector3(0, 1, 0));
                     
                     //DEBUG----------------------------------------------
                     GameObject nodeObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -104,7 +107,7 @@ public class NodeManager : MonoBehaviour
 
                     //add the vert to check for overlaps
                     overlapCheck.Add(vert);
-                    m_createdNodes.Add(new Node(m_nodeConnectionAmount, vertWorldPos));
+                    m_createdNodes.Add(new Node(m_nodeConnectionAmount, vertWorldPos, newNormal));
                 }
             }
 
@@ -219,7 +222,13 @@ public class NodeManager : MonoBehaviour
                 if (node1 == node2)
                     continue;
 
-                if (Mathf.Abs(node1.m_position.x - node2.m_position.x) < 0.1f && Mathf.Abs(node1.m_position.z - node2.m_position.z) < 0.1f)
+                //Include option for objects to be selected for normal or for y axis checks
+
+                float dist = Vector3.Distance(node1.m_position, node2.m_position);
+                Vector3 checkPosition = node1.m_position - node1.m_normal * dist;
+
+                //if (Mathf.Abs(node1.m_position.x - node2.m_position.x) < 0.2f && Mathf.Abs(node1.m_position.z - node2.m_position.z) < 0.2f)
+                if (Vector3.Distance(checkPosition, node2.m_position) < 0.3f)
                 {
                     if (NodeRemoval(node1, node2))
                     {
@@ -232,6 +241,15 @@ public class NodeManager : MonoBehaviour
                         return;
                     }
                 }
+
+
+                //get the object point (hopefully middle or bottom and do a direction dot product check for if the node will be above or below to remove verts
+
+
+
+
+
+
             }
         }
         
