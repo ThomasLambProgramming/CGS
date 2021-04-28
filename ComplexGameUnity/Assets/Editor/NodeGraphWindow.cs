@@ -53,9 +53,9 @@ public class NodeGraphWindow : EditorWindow
         {
             NodeManager.ResetValues();
         }
-        
-        
-        
+
+
+      
         
     }
 }

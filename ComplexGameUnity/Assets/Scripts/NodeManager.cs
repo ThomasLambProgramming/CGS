@@ -92,11 +92,13 @@ public class NodeManager : MonoBehaviour
                     
                     //DEBUG----------------------------------------------
                     GameObject nodeObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    nodeObj.transform.parent = currentObject.transform;
                     //this is debug but will also be used for the main system
-                    nodeObj.transform.position = vertScale + currentObject.transform.position;
+
+                    Vector3 vertWorldPos = currentObject.transform.TransformPoint(vertScale);
+                    nodeObj.transform.position = vertWorldPos;
                     nodeObj.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
                     nodeObj.tag = "Node";
-                    nodeObj.transform.parent = currentObject.transform;
                     //Debug End-----------------------------------------------------
 
                     //add the vert to check for overlaps
