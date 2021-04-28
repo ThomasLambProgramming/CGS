@@ -26,6 +26,7 @@ public class NodeManager : MonoBehaviour
     private static float m_nodeDistance = 5;
     private static int m_nodeConnectionAmount = 4;
     private static int m_maxNodes = 1000;
+    private static float m_ySpaceLimit = 1;
 
     //this is the result of baking and linking the nodes
     //This is an array so the memory is compact and can be randomly accessed by the 
@@ -46,11 +47,12 @@ public class NodeManager : MonoBehaviour
         m_objectPositions = new List<Vector3>();
         m_nodeGraph = null;
     }
-    public static void ChangeValues(float a_nodeDistance, int a_connectionAmount, int a_maxNodes)
+    public static void ChangeValues(float a_nodeDistance, int a_connectionAmount, int a_maxNodes, float a_yLimit)
     {
         m_nodeDistance = a_nodeDistance;
         m_nodeConnectionAmount = a_connectionAmount;
         m_maxNodes = a_maxNodes;
+        m_ySpaceLimit = a_yLimit;
     }
     public static void CreateNodes(int a_layerMask)
     {
@@ -89,22 +91,20 @@ public class NodeManager : MonoBehaviour
                         vert.x * currentObject.transform.localScale.x,
                         vert.y * currentObject.transform.localScale.y,
                         vert.z * currentObject.transform.localScale.z);
+                    Vector3 vertWorldPos = currentObject.transform.TransformPoint(vertScale);
                     
                     //DEBUG----------------------------------------------
                     GameObject nodeObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                    nodeObj.transform.parent = currentObject.transform;
                     //this is debug but will also be used for the main system
-
-                    Vector3 vertWorldPos = currentObject.transform.TransformPoint(vertScale);
                     nodeObj.transform.position = vertWorldPos;
                     nodeObj.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
                     nodeObj.tag = "Node";
+                    nodeObj.transform.parent = currentObject.transform;
                     //Debug End-----------------------------------------------------
 
                     //add the vert to check for overlaps
                     overlapCheck.Add(vert);
-                    
-                    m_createdNodes.Add(new Node(m_nodeConnectionAmount, nodeObj.transform.position));
+                    m_createdNodes.Add(new Node(m_nodeConnectionAmount, vertWorldPos));
                 }
             }
 
@@ -112,9 +112,10 @@ public class NodeManager : MonoBehaviour
             m_objectPositions.Add(currentObject.transform.position);
         }
         Debug.Log("CREATION PASSED");
+
     }
 
-    public static void LinkNodes()
+    public static void LinkNodes(float a_nodeDistance, bool a_ranOnce = true)
     {
         if (m_createdNodes == null)
             return;
@@ -141,9 +142,61 @@ public class NodeManager : MonoBehaviour
                 }
                 if (hasDupe)
                     continue;
+
+
+                //check if a node is above or below another node
+                if (node1.m_position.x == node2.m_position.x && node1.m_position.z == node2.m_position.z)
+                {
+                    if (node1.m_position.y > node2.m_position.y)
+                    {
+                        foreach(var connection in node2.m_connectedNodes)
+                        {
+                            if (connection == null)
+                                continue;
+                            int index = 0;
+                            foreach(var nodeConnected in connection.m_connectedNodes)
+                            {
+                                if (nodeConnected == null)
+                                    continue;
+                                if (connection.m_connectedNodes[index] == node2)
+                                {
+                                    connection.m_connectedNodes[index] = null;
+                                    m_createdNodes.Remove(node2);
+                                    LinkNodes(a_nodeDistance);
+                                    return;
+                                }
+                                index++;
+                            }
+                        }
+                        
+                    }
+                    else
+                    {
+                        foreach (var connection in node1.m_connectedNodes)
+                        {
+                            if (connection == null)
+                                continue;
+                            int index = 0;
+                            foreach (var nodeConnected in connection.m_connectedNodes)
+                            {
+                                if (nodeConnected == null)
+                                    continue;
+                                if (connection.m_connectedNodes[index] == node1)
+                                {
+                                    connection.m_connectedNodes[index] = null;
+                                    m_createdNodes.Remove(node1);
+                                    LinkNodes(a_nodeDistance);
+                                    return;
+                                }
+                                index++;
+                            }
+                        }
+                    }
+                }
                 
                 //if distance between nodes less than set distance then we can add
-                if (Vector3.Distance(node1.m_position, node2.m_position) < m_nodeDistance)
+                if (Vector3.Distance(node1.m_position, node2.m_position) < a_nodeDistance
+                    && Mathf.Abs(node1.m_position.y - node2.m_position.y) < m_ySpaceLimit)
                 {
                     //if the nodes have a spare slot then add eachother (for making it easy nodes have a current index
                     //used amount so its easy to tell if all the connection amounts are full
@@ -158,6 +211,10 @@ public class NodeManager : MonoBehaviour
                 }
             }
         }
+
+        //Set a double pass to connect properly 
+        
+
 
         //make an array to fit nodes with added redundancy 
         m_nodeGraph = new Node[m_createdNodes.Count];
@@ -182,7 +239,8 @@ public class NodeManager : MonoBehaviour
         {
             for(int i = 0; i < node.m_connectionAmount - 1; i++)
             {
-                Debug.DrawLine(node.m_position,node.m_connectedNodes[i].m_position);
+                if (node.m_connectedNodes[i] != null)
+                    Debug.DrawLine(node.m_position,node.m_connectedNodes[i].m_position);
             }
         }
         Debug.Log("DRAW PASSED");

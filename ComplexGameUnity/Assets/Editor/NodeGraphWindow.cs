@@ -9,6 +9,7 @@ public class NodeGraphWindow : EditorWindow
     float m_nodeDistance = 5;
     int m_nodeConnectionAmount = 4;
     int m_maxNodes = 1000;
+    float m_ySpaceLimit = 1;
     //default mask is layer one only 
     private int m_layerMask = 0 << 1;
    //private string m_tagMask = "";
@@ -30,18 +31,18 @@ public class NodeGraphWindow : EditorWindow
         m_nodeDistance = EditorGUILayout.FloatField("Node Join Distance", m_nodeDistance);
         m_nodeConnectionAmount = EditorGUILayout.IntField("Max connections", m_nodeConnectionAmount);
         m_maxNodes = EditorGUILayout.IntField("Max nodes",m_maxNodes);
-        
+        m_ySpaceLimit = EditorGUILayout.FloatField("Max Y Distance", m_ySpaceLimit);
         m_layerMask = EditorGUILayout.MaskField("Mask layers", m_layerMask, m_maskOptions);
         
         if (GUILayout.Button("Bake Nodes"))
         {
-            NodeManager.ChangeValues(m_nodeDistance, m_nodeConnectionAmount, m_maxNodes);
+            NodeManager.ChangeValues(m_nodeDistance, m_nodeConnectionAmount, m_maxNodes,m_ySpaceLimit);
             NodeManager.CreateNodes(m_layerMask);
         }
 
         if (GUILayout.Button("Link Nodes"))
         {
-            NodeManager.LinkNodes();
+            NodeManager.LinkNodes(m_nodeDistance);
         }
 
         if (GUILayout.Button("Show Links"))
@@ -55,7 +56,7 @@ public class NodeGraphWindow : EditorWindow
         }
 
 
-      
+        
         
     }
 }
