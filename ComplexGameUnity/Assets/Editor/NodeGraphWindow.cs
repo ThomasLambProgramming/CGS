@@ -10,6 +10,9 @@ public class NodeGraphWindow : EditorWindow
     int m_nodeConnectionAmount = 16;
     int m_maxNodes = 1000;
     float m_ySpaceLimit = 1;
+    bool loaded = false;
+
+
     //default mask is layer one only 
     private int m_layerMask = 0 << 1;
    //private string m_tagMask = "";
@@ -24,9 +27,17 @@ public class NodeGraphWindow : EditorWindow
     public static void ShowWindow()
     {
         EditorWindow.GetWindow(typeof(NodeGraphWindow));
+        
     }
     void OnGUI()
     {
+        if (loaded == false)
+        {
+            LoadFile();
+            loaded = true;
+        }
+        SaveSystem.SaveData(m_nodeDistance, m_nodeConnectionAmount, m_maxNodes, m_ySpaceLimit, m_layerMask, Application.dataPath + "/Editor/Config.json");
+        
         GUILayout.Label("Node Settings", EditorStyles.boldLabel);
         m_nodeDistance = EditorGUILayout.FloatField("Node Join Distance", m_nodeDistance);
         m_nodeConnectionAmount = EditorGUILayout.IntField("Max connections", m_nodeConnectionAmount);
@@ -54,9 +65,25 @@ public class NodeGraphWindow : EditorWindow
         {
             NodeManager.ResetValues();
         }
+        
+
 
 
         
         
+    }
+
+    private void LoadFile()
+    {
+        //load all the settings and if its null we can keep the defaults
+        EditorValues loadedSettings = SaveSystem.LoadData(Application.dataPath + "/Editor/Config.json");
+        if (loadedSettings == null)
+            return;
+
+        m_nodeDistance = loadedSettings.m_distance;
+        m_nodeConnectionAmount = loadedSettings.m_nodeConnectionAmount;
+        m_maxNodes = loadedSettings.m_maxNodes;
+        m_ySpaceLimit = loadedSettings.m_ySpaceLimit;
+        m_layerMask = loadedSettings.m_layerMask;
     }
 }
