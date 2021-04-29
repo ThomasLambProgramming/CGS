@@ -29,6 +29,7 @@ public class SaveSystem
         toSave.m_ySpaceLimit = a_ylimit;
         toSave.m_layerMask = a_layerMask;
 
+        //this gets the json string and then adds it to the file specified
         StreamWriter stream = new StreamWriter(a_filePath);
         string json = JsonUtility.ToJson(toSave);
         stream.Write(json);

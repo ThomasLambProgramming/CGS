@@ -27,7 +27,6 @@ public class NodeGraphWindow : EditorWindow
     public static void ShowWindow()
     {
         EditorWindow.GetWindow(typeof(NodeGraphWindow));
-        
     }
     void OnGUI()
     {
@@ -36,6 +35,7 @@ public class NodeGraphWindow : EditorWindow
             LoadFile();
             loaded = true;
         }
+        
         SaveSystem.SaveData(m_nodeDistance, m_nodeConnectionAmount, m_maxNodes, m_ySpaceLimit, m_layerMask, Application.dataPath + "/Editor/Config.json");
         
         GUILayout.Label("Node Settings", EditorStyles.boldLabel);
@@ -65,14 +65,7 @@ public class NodeGraphWindow : EditorWindow
         {
             NodeManager.ResetValues();
         }
-        
-
-
-
-        
-        
     }
-
     private void LoadFile()
     {
         //load all the settings and if its null we can keep the defaults

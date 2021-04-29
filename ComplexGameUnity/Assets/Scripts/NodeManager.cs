@@ -17,21 +17,10 @@ using UnityEngine.Analytics;
     possible griding of the nodegraph into sections with x,z bounds to tell if it needs to search the whole graph or not (can also use binary search as well here for finding grid distances and etc)
 
 */
-//yeah i hate myself for not remembering the pfnode with weight before making most of this
-public class PFNode
-{
-    public float m_weight = 0;
-    public Node m_node = null;
-    public PFNode(Node a_node, float a_weight) 
-    { 
-        m_node = a_node;
-        m_weight = a_weight;
-    }
-}
 public class Node
 {
     //by making a preset i can make these nodes into an array 
-    public PFNode[] m_connectedNodes = null;
+    public Node[] m_connectedNodes = null;
     public Vector3 m_position = new Vector3(0,0,0);
     public int m_connectionAmount = 0;
     //this is the nodes normal for checking if other nodes need to be deleted
@@ -39,7 +28,7 @@ public class Node
     public Node(int a_nodeConnectionLimit, Vector3 a_position, Vector3 a_normal)
     {
         m_position = a_position;
-        m_connectedNodes = new PFNode[a_nodeConnectionLimit];
+        m_connectedNodes = new Node[a_nodeConnectionLimit];
         m_normal = a_normal;
         m_connectionAmount = 0;
     }
@@ -47,7 +36,7 @@ public class Node
 
 public class NodeManager : MonoBehaviour
 {
-    private ComputeShader m_NodeLinkingShader;
+    //private ComputeShader m_NodeLinkingShader;
 
     //Static variables for use by the whole system
     private static float m_nodeDistance = 5;
@@ -146,7 +135,6 @@ public class NodeManager : MonoBehaviour
         Debug.Log("CREATION PASSED");
 
     }
-
     //Im going to have to change this to use the dot product so its not doing as many distance checks
     public static void LinkNodes(float a_nodeDistance, bool a_firstRun = true)
     {
@@ -169,14 +157,14 @@ public class NodeManager : MonoBehaviour
                 {
                     if (VARIABLE == null)
                         continue;
-                    if (VARIABLE.m_node == node1)
+                    if (VARIABLE == node1)
                         hasDupe = true;
                 }
                 foreach (var VARIABLE in node1.m_connectedNodes)
                 {
                     if (VARIABLE == null)
                         continue;
-                    if (VARIABLE.m_node == node2)
+                    if (VARIABLE == node2)
                         hasDupe = true;
                 }
                 if (hasDupe)
@@ -197,7 +185,7 @@ public class NodeManager : MonoBehaviour
                             if (node1.m_connectedNodes[i] == null)
                             {
                                 //im making the weight for now have a heigher weight based on how much 
-                                node1.m_connectedNodes[i] = new PFNode(node2, node2.m_position.x + node2.m_position.y * 1.5f + node2.m_position.z);
+                                node1.m_connectedNodes[i] = node2;
                                 node1.m_connectionAmount++;
                                 break;
                             }
@@ -207,7 +195,7 @@ public class NodeManager : MonoBehaviour
                         {
                             if (node2.m_connectedNodes[i] == null)
                             {
-                                node2.m_connectedNodes[i] = new PFNode(node1, node1.m_position.x + node1.m_position.y * 1.5f + node1.m_position.z); ;
+                                node2.m_connectedNodes[i] = node1;
                                 node2.m_connectionAmount++;
                                 break;
                             }
@@ -248,7 +236,7 @@ public class NodeManager : MonoBehaviour
             {
                 //if the connection isnt null then draw a line of it this whole function is self explaining
                 if (node.m_connectedNodes[i] != null)
-                    Debug.DrawLine(node.m_position,node.m_connectedNodes[i].m_node.m_position);
+                    Debug.DrawLine(node.m_position,node.m_connectedNodes[i].m_position);
             }
         }
         Debug.Log("DRAW PASSED");
@@ -265,6 +253,8 @@ public class NodeManager : MonoBehaviour
 
                 //this gets the normal and sees if the node is in line with the normal. (this works for squares and some other stuff, this needs to be changed to dotproducts to work with more complex shapes)
                 float dist = Vector3.Distance(node1.m_position, node2.m_position);
+                if (dist > 3)
+                    continue;
                 Vector3 checkPosition = node1.m_position - node1.m_normal * dist;
 
                 //this is the other if check that just sees if its in the world space square range of the node (make an option to say how you want to remove unneeded nodes)
@@ -299,13 +289,13 @@ public class NodeManager : MonoBehaviour
                 //remove the node from all of its connections then remove it from the main list
                 for(int i = 0; i < m_nodeConnectionAmount; i++)
                 {
-                    if (connection.m_node.m_connectedNodes[i] == null)
+                    if (connection.m_connectedNodes[i] == null)
                         continue;
 
-                    if (connection.m_node.m_connectedNodes[i].m_node == node2)
+                    if (connection.m_connectedNodes[i] == node2)
                     {
-                        connection.m_node.m_connectedNodes[i] = null;
-                        connection.m_node.m_connectionAmount--;
+                        connection.m_connectedNodes[i] = null;
+                        connection.m_connectionAmount--;
                         break;
                     }
                     
