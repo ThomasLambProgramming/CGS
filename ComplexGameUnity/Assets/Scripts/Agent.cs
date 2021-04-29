@@ -45,16 +45,17 @@ public class Agent : MonoBehaviour
                 
             }
         }
-        
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
             if (start != null && end != null)
             {
                 path = AStar.Pathfind(start, end);
                 line.positionCount = path.Count;
-                for(int i = 0; i < path.Count; i++)
+                for (int i = 0; i < path.Count; i++)
                 {
                     line.SetPosition(i, path[i]);
                 }
             }
-        
+        }
     }
 }

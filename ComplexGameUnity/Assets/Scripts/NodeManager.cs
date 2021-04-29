@@ -171,6 +171,10 @@ public class NodeManager : MonoBehaviour
                     continue;
 
                 //if distance between nodes less than set distance then we can add
+                //add a_nodeDistance tothe distance check when done
+                if (Vector3.Distance(node1.m_position, node2.m_position) > 1.3 && node1.m_position.y - node2.m_position.y == 0)
+                    continue; 
+
                 if (Vector3.Distance(node1.m_position, node2.m_position) < a_nodeDistance
                     && Mathf.Abs(node1.m_position.y - node2.m_position.y) < m_ySpaceLimit)
                 {
