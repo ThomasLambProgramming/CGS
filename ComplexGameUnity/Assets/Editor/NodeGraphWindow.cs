@@ -11,7 +11,7 @@ public class NodeGraphWindow : EditorWindow
     int m_maxNodes = 1000;
     float m_ySpaceLimit = 1;
     bool loaded = false;
-
+    
 
     //default mask is layer one only 
     private int m_layerMask = 0 << 1;
@@ -53,7 +53,9 @@ public class NodeGraphWindow : EditorWindow
 
         if (GUILayout.Button("Link Nodes"))
         {
+            float time = Time.realtimeSinceStartup;
             NodeManager.LinkNodes(m_nodeDistance);
+            Debug.Log(Time.realtimeSinceStartup - time);
         }
 
         if (GUILayout.Button("Show Links"))
@@ -65,6 +67,8 @@ public class NodeGraphWindow : EditorWindow
         {
             NodeManager.ResetValues();
         }
+        
+       
     }
     private void LoadFile()
     {

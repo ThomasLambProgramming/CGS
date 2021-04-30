@@ -1,0 +1,40 @@
+Structure of node baking
+
+find marked/all gameobjects 
+	check for mesh renderer
+		check every vertex for overlaps and then do the underneath check
+
+//possibly have more checks like a xz distance bounds kind of thing
+
+add all passing verts to list
+
+//this way we are only checking the positions rather than the nodes then managing the connections and etc
+//and the mesh can be made after with only the verts that matter
+//mininum is needed for doing the xz collision checks
+//if y difference is greater than max y difference then we dont check (knowing its too large)
+//if a node is too far away from any point then we can remove (a no connection node is just unwanted memory)
+
+do underneath checks on all verts against all verts
+//at this point no links should be made and only the positions are needed
+
+//by this point all overlaps should be done so we can send all vert vec3 positions to the gpu to link
+//gpu should give back array of nodes with their connections
+each node gets its own (whatever the thread is) to search through the other positions to see if they link
+
+returns the node and its links
+add all nodes into one array = nodegraph
+
+
+
+//check how memory works on the compute shaders first 
+
+gpu
+node
+{
+	position
+
+}
+
+int index of empty
+
+

@@ -34,10 +34,13 @@ public class Node
     }
 }
 
+
+
+
 public class NodeManager : MonoBehaviour
 {
-    //private ComputeShader m_NodeLinkingShader;
-
+    private static ComputeShader m_NodeLinkingShader = null;
+    
     //Static variables for use by the whole system
     private static float m_nodeDistance = 5;
     private static int m_nodeConnectionAmount = 4;
@@ -56,6 +59,21 @@ public class NodeManager : MonoBehaviour
     //been processed (this does imply no objects are allowed to overlap perfectly)
     private static List<Vector3> m_objectPositions = new List<Vector3>();
 
+    public void GetShader()
+    {
+        GameObject[] finder = FindObjectsOfType<GameObject>();
+        foreach (var obj in finder)
+        {
+            if (finder != null)
+            {
+                if (obj.CompareTag("ShaderHolder"))
+                {
+                    var temp = obj.GetComponent<ShaderHolder>();
+                    m_NodeLinkingShader = temp.shader;
+                }
+            }
+        }
+    }
     //debug purposes
     public static void ResetValues()
     {
@@ -74,6 +92,7 @@ public class NodeManager : MonoBehaviour
     {
         //gets every gameobject (change later to be a selection of some sort, possibly layers or manual selection   
         GameObject[] foundObjects = FindObjectsOfType<GameObject>();
+        List<Vector3> overlapCheck = new List<Vector3>();
         foreach (GameObject currentObject in foundObjects)
         {
 
@@ -90,17 +109,25 @@ public class NodeManager : MonoBehaviour
             if (m_objectPositions.Contains(currentObject.transform.position))
                 continue;
 
-            //this checks for objects that have multiple normals at the same position (lighting)
-            List<Vector3> overlapCheck = new List<Vector3>();
+            Vector3 newNormal = currentObject.transform.TransformDirection(new Vector3(0, 1, 0));
             foreach (var vert in objectMesh.sharedMesh.vertices)
             {
                 bool canAdd = true;
-                foreach (var position in overlapCheck)
+                for (int i = 0; i < overlapCheck.Count; i++)
                 {
-                    if (Vector3.Distance(vert, position) < 0.01f)
-                        canAdd = false;
+                    float dist = Vector3.Distance(vert, overlapCheck[i]);
+                    Vector3 checkPosition = overlapCheck[i] - newNormal * dist;
+                    if (Vector3.Distance(checkPosition, vert) < 0.3f)
+                    {
+                        if (vert.y < overlapCheck[i].y)
+                            canAdd = false;
+                        else
+                        {
+                            overlapCheck.Remove(overlapCheck[i]);
+                            i--;
+                        }
+                    }
                 }
-                
                 if (canAdd)
                 {   
                     //gets the scale relative to the current object (the cube can have a scale of 20 so the position in world is larger)
@@ -110,19 +137,8 @@ public class NodeManager : MonoBehaviour
                         vert.z * currentObject.transform.localScale.z);
                     Vector3 vertWorldPos = currentObject.transform.TransformPoint(vertScale);
                     //this gets the transformed 0,1 vector so i know what direction the y axis of the object is
-                    Vector3 newNormal = currentObject.transform.TransformDirection(new Vector3(0, 1, 0));
-                    
-                    //DEBUG----------------------------------------------
-                    //this is debug but will also be used for the main system
-                    //this is just a temp sphere i might see how to overlay position and etc
-                    GameObject nodeObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                    nodeObj.transform.position = vertWorldPos;
-                    nodeObj.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
-                    nodeObj.tag = "Node";
-                    //set to parent so it doesnt clutter the inspector
-                    nodeObj.transform.parent = currentObject.transform;
-                    //Debug End-----------------------------------------------------
 
+                   
                     //add the vert to check for overlaps
                     overlapCheck.Add(vert);
                     m_createdNodes.Add(new Node(m_nodeConnectionAmount, vertWorldPos, newNormal));
@@ -140,6 +156,8 @@ public class NodeManager : MonoBehaviour
     {
         if (m_createdNodes == null)
             return;
+
+        
 
         //loop each node over the whole collection for joining and deleting as needed
         //this needs to be changed to the graphics system soon instead of cpu loop
@@ -208,15 +226,8 @@ public class NodeManager : MonoBehaviour
                 }
             }
         }
-        //we delete every overlap of nodes on the xz then run the link again
         
-        if (a_firstRun)
-        {
-            DeleteOverlapNodes();
-            LinkNodes(m_nodeDistance, false);
-            return;
-        }
-        //make an array to fit nodes with added redundancy 
+        
         m_nodeGraph = new Node[m_createdNodes.Count];
 
         //add all nodes into the array
