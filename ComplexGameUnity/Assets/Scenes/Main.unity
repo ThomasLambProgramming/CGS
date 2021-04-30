@@ -594,7 +594,7 @@ LineRenderer:
     generateLightingData: 0
   m_UseWorldSpace: 1
   m_Loop: 0
---- !u!1001 &1438666780
+--- !u!1001 &1836111840
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -603,15 +603,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3266710364250996974, guid: 78b88f5c27fb088489f7dcd567db32dc, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 15.496149
+      value: 43.500977
       objectReference: {fileID: 0}
     - target: {fileID: 3266710364250996974, guid: 78b88f5c27fb088489f7dcd567db32dc, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 7.267977
+      value: 23.337029
       objectReference: {fileID: 0}
     - target: {fileID: 3266710364250996974, guid: 78b88f5c27fb088489f7dcd567db32dc, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.755322
+      value: 4.34599
       objectReference: {fileID: 0}
     - target: {fileID: 3266710364250996974, guid: 78b88f5c27fb088489f7dcd567db32dc, type: 3}
       propertyPath: m_LocalRotation.x
