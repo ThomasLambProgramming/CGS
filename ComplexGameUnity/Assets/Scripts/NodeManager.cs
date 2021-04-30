@@ -92,7 +92,11 @@ public class NodeManager : MonoBehaviour
     {
         //gets every gameobject (change later to be a selection of some sort, possibly layers or manual selection   
         GameObject[] foundObjects = FindObjectsOfType<GameObject>();
-        List<Vector3> overlapCheck = new List<Vector3>();
+
+
+        List<Vector3> nodePositions = new List<Vector3>();
+        List<Vector3> normalPositions = new List<Vector3>();
+
         foreach (GameObject currentObject in foundObjects)
         {
 
@@ -110,47 +114,72 @@ public class NodeManager : MonoBehaviour
                 continue;
 
             Vector3 newNormal = currentObject.transform.TransformDirection(new Vector3(0, 1, 0));
+
+            List<Vector3> objectVerts = new List<Vector3>();
             foreach (var vert in objectMesh.sharedMesh.vertices)
             {
+                if (objectVerts.Contains(vert))
+                    continue;
+
+                //gets the scale relative to the current object (the cube can have a scale of 20 so the position in world is larger)
+                Vector3 vertScale = new Vector3(
+                    vert.x * currentObject.transform.localScale.x,
+                    vert.y * currentObject.transform.localScale.y,
+                    vert.z * currentObject.transform.localScale.z);
+                Vector3 vertWorldPos = currentObject.transform.TransformPoint(vertScale);
                 bool canAdd = true;
-                for (int i = 0; i < overlapCheck.Count; i++)
+                for (int i = 0; i < nodePositions.Count; i++)
                 {
-                    float dist = Vector3.Distance(vert, overlapCheck[i]);
-                    Vector3 checkPosition = overlapCheck[i] - newNormal * dist;
-                    if (Vector3.Distance(checkPosition, vert) < 0.3f)
+
+                    float dist = Vector3.Distance(vertWorldPos, nodePositions[i]);
+                    Vector3 checkPosition = nodePositions[i] - newNormal * dist;
+                    if (Vector3.Distance(checkPosition, vertWorldPos) < 0.3f)
                     {
-                        if (vert.y < overlapCheck[i].y)
+                        float ydistance = vertWorldPos.y - nodePositions[i].y;
+                        if (ydistance < 0)
                             canAdd = false;
+                        else if (ydistance > m_ySpaceLimit)
+                        {
+                            canAdd = true;
+                        }
                         else
                         {
-                            overlapCheck.Remove(overlapCheck[i]);
+                            nodePositions.Remove(nodePositions[i]);
+                            normalPositions.RemoveAt(i);
                             i--;
                         }
                     }
                 }
+                //this gets the transformed 0,1 vector so i know what direction the y axis of the object is
+
                 if (canAdd)
-                {   
-                    //gets the scale relative to the current object (the cube can have a scale of 20 so the position in world is larger)
-                    Vector3 vertScale = new Vector3(
-                        vert.x * currentObject.transform.localScale.x,
-                        vert.y * currentObject.transform.localScale.y,
-                        vert.z * currentObject.transform.localScale.z);
-                    Vector3 vertWorldPos = currentObject.transform.TransformPoint(vertScale);
-                    //this gets the transformed 0,1 vector so i know what direction the y axis of the object is
+                {
 
-                   
                     //add the vert to check for overlaps
-                    overlapCheck.Add(vert);
-                    m_createdNodes.Add(new Node(m_nodeConnectionAmount, vertWorldPos, newNormal));
+                    nodePositions.Add(vertWorldPos);
+                    normalPositions.Add(newNormal);
                 }
-            }
 
+
+            }
             //add the checked object for later to stop double baking
             m_objectPositions.Add(currentObject.transform.position);
-        }
-        Debug.Log("CREATION PASSED");
+        
 
+
+        }
+
+        for (int i = 0; i < nodePositions.Count; i++)
+        {
+
+            m_createdNodes.Add(new Node(m_nodeConnectionAmount, nodePositions[i], normalPositions[i]));
+        }
+        //foreach list make new nodes
+
+        Debug.Log("CREATION PASSED");
     }
+
+    
     //Im going to have to change this to use the dot product so its not doing as many distance checks
     public static void LinkNodes(float a_nodeDistance, bool a_firstRun = true)
     {
@@ -193,8 +222,7 @@ public class NodeManager : MonoBehaviour
                 if (Vector3.Distance(node1.m_position, node2.m_position) > 1.3 && node1.m_position.y - node2.m_position.y == 0)
                     continue; 
 
-                if (Vector3.Distance(node1.m_position, node2.m_position) < a_nodeDistance
-                    && Mathf.Abs(node1.m_position.y - node2.m_position.y) < m_ySpaceLimit)
+                if (Vector3.Distance(node1.m_position, node2.m_position) < a_nodeDistance)
                 {
                     //if the nodes have a spare slot then add eachother (for making it easy nodes have a current index
                     //used amount so its easy to tell if all the connection amounts are full
@@ -256,69 +284,5 @@ public class NodeManager : MonoBehaviour
         }
         Debug.Log("DRAW PASSED");
     }
-    private static void DeleteOverlapNodes()
-    {
-        //loops over each node again with each node (this has to be changed looping through the list 4 times is trash)
-        foreach (var node1 in m_createdNodes)
-        {
-            foreach (var node2 in m_createdNodes)
-            {
-                if (node1 == node2)
-                    continue;
-
-                //this gets the normal and sees if the node is in line with the normal. (this works for squares and some other stuff, this needs to be changed to dotproducts to work with more complex shapes)
-                float dist = Vector3.Distance(node1.m_position, node2.m_position);
-                if (dist > 3)
-                    continue;
-                Vector3 checkPosition = node1.m_position - node1.m_normal * dist;
-
-                //this is the other if check that just sees if its in the world space square range of the node (make an option to say how you want to remove unneeded nodes)
-                //if (Mathf.Abs(node1.m_position.x - node2.m_position.x) < 0.2f && Mathf.Abs(node1.m_position.z - node2.m_position.z) < 0.2f)
-                if (Vector3.Distance(checkPosition, node2.m_position) < 0.3f)
-                {
-                    //we have to call the function again with recursion because the loop doesnt like it when we remove a node from the list so calling it again works
-                    if (NodeRemoval(node1, node2))
-                    {
-                        DeleteOverlapNodes();
-                        return;
-                    }
-                    else if (NodeRemoval(node2, node1))
-                    {
-                        DeleteOverlapNodes();
-                        return;
-                    }
-                }
-            }
-        }
-    }
-    private static bool NodeRemoval(Node node1, Node node2)
-    {
-        //we want the top node for pathfinding so we see  which is taller
-        if (node1.m_position.y > node2.m_position.y)
-        {
-            foreach (var connection in node2.m_connectedNodes)
-            {
-                if (connection == null)
-                    continue;
-               
-                //remove the node from all of its connections then remove it from the main list
-                for(int i = 0; i < m_nodeConnectionAmount; i++)
-                {
-                    if (connection.m_connectedNodes[i] == null)
-                        continue;
-
-                    if (connection.m_connectedNodes[i] == node2)
-                    {
-                        connection.m_connectedNodes[i] = null;
-                        connection.m_connectionAmount--;
-                        break;
-                    }
-                    
-                }
-            }
-            m_createdNodes.Remove(node2);
-            return true;
-        }
-        return false;
-    }
+    
 }

@@ -47,19 +47,11 @@ public class NodeGraphWindow : EditorWindow
         
         if (GUILayout.Button("Bake Nodes"))
         {
+            float time = Time.realtimeSinceStartup;
             NodeManager.ChangeValues(m_nodeDistance, m_nodeConnectionAmount, m_maxNodes,m_ySpaceLimit);
             NodeManager.CreateNodes(m_layerMask);
-        }
-
-        if (GUILayout.Button("Link Nodes"))
-        {
-            float time = Time.realtimeSinceStartup;
             NodeManager.LinkNodes(m_nodeDistance);
             Debug.Log(Time.realtimeSinceStartup - time);
-        }
-
-        if (GUILayout.Button("Show Links"))
-        {
             NodeManager.DrawNodes();
         }
 
