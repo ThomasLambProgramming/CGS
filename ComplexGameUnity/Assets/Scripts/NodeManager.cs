@@ -33,10 +33,6 @@ public class Node
         m_connectionAmount = 0;
     }
 }
-
-
-
-
 public class NodeManager : MonoBehaviour
 {
     private static ComputeShader m_NodeLinkingShader = null;
@@ -46,39 +42,14 @@ public class NodeManager : MonoBehaviour
     private static int m_nodeConnectionAmount = 4;
     private static int m_maxNodes = 1000;
     private static float m_ySpaceLimit = 1;
-
-    //this is the result of baking and linking the nodes
-    //This is an array so the memory is compact and can be randomly accessed by the 
-    //pathfinding algorithm so for loops can be avoided
+    
     public static Node[] m_nodeGraph = null;
-
-    //list of all the node positions for the linking process
+    
     private static List<Node> m_createdNodes = new List<Node>();
-
-    //list of all the object positions so that the system knows what objects have already 
-    //been processed (this does imply no objects are allowed to overlap perfectly)
-    private static List<Vector3> m_objectPositions = new List<Vector3>();
-
-    public void GetShader()
-    {
-        GameObject[] finder = FindObjectsOfType<GameObject>();
-        foreach (var obj in finder)
-        {
-            if (finder != null)
-            {
-                if (obj.CompareTag("ShaderHolder"))
-                {
-                    var temp = obj.GetComponent<ShaderHolder>();
-                    m_NodeLinkingShader = temp.shader;
-                }
-            }
-        }
-    }
-    //debug purposes
+    
     public static void ResetValues()
     {
         m_createdNodes = new List<Node>();
-        m_objectPositions = new List<Vector3>();
         m_nodeGraph = null;
     }
     public static void ChangeValues(float a_nodeDistance, int a_connectionAmount, int a_maxNodes, float a_yLimit)
@@ -88,19 +59,22 @@ public class NodeManager : MonoBehaviour
         m_maxNodes = a_maxNodes;
         m_ySpaceLimit = a_yLimit;
     }
+    public class nodeCheck
+    {
+        public Vector3 position;
+        public Vector3 normal;
+    }
+    
     public static void CreateNodes(int a_layerMask)
     {
         //gets every gameobject (change later to be a selection of some sort, possibly layers or manual selection   
         GameObject[] foundObjects = FindObjectsOfType<GameObject>();
-
-
-        List<Vector3> nodePositions = new List<Vector3>();
-        List<Vector3> normalPositions = new List<Vector3>();
-
+        List<nodeCheck> nodes = new List<nodeCheck>();
+        
         foreach (GameObject currentObject in foundObjects)
         {
-
-            //if its a node (debug currently creates spheres) goto next object
+            //if its a node goto next object
+            //this must be changed later to allow for masking and etc
             if (currentObject.CompareTag("Node"))
                 continue;
 
@@ -109,77 +83,65 @@ public class NodeManager : MonoBehaviour
             if (objectMesh == null)
                 continue;
 
-            //if the object has already been processed next
-            if (m_objectPositions.Contains(currentObject.transform.position))
-                continue;
-
+            //we get the y default and get the transforms version so we get the correct y axis of the gameobject
             Vector3 newNormal = currentObject.transform.TransformDirection(new Vector3(0, 1, 0));
-
+            
+            //vertex positions of the current object to avoid overlaps and reduce entire list for loops
             List<Vector3> objectVerts = new List<Vector3>();
             foreach (var vert in objectMesh.sharedMesh.vertices)
             {
-                if (objectVerts.Contains(vert))
-                    continue;
-
-                //gets the scale relative to the current object (the cube can have a scale of 20 so the position in world is larger)
-                Vector3 vertScale = new Vector3(
-                    vert.x * currentObject.transform.localScale.x,
-                    vert.y * currentObject.transform.localScale.y,
-                    vert.z * currentObject.transform.localScale.z);
-                Vector3 vertWorldPos = currentObject.transform.TransformPoint(vertScale);
                 bool canAdd = true;
-                for (int i = 0; i < nodePositions.Count; i++)
+                nodeCheck node = new nodeCheck();
+                node.position = currentObject.transform.TransformPoint(vert);
+                node.normal = newNormal;
+                foreach (var VARIABLE in objectVerts)
                 {
-
-                    float dist = Vector3.Distance(vertWorldPos, nodePositions[i]);
-                    Vector3 checkPosition = nodePositions[i] - newNormal * dist;
-                    if (Vector3.Distance(checkPosition, vertWorldPos) < 0.3f)
+                    if (Vector3.Distance(VARIABLE, node.position) < 0.3f)
                     {
-                        float ydistance = vertWorldPos.y - nodePositions[i].y;
-                        if (ydistance < 0)
-                            canAdd = false;
-                        else if (ydistance > m_ySpaceLimit)
-                        {
-                            canAdd = true;
-                        }
-                        else
-                        {
-                            nodePositions.Remove(nodePositions[i]);
-                            normalPositions.RemoveAt(i);
-                            i--;
-                        }
+                        canAdd = false;
+                        break;
                     }
                 }
-                //this gets the transformed 0,1 vector so i know what direction the y axis of the object is
-
                 if (canAdd)
                 {
-
-                    //add the vert to check for overlaps
-                    nodePositions.Add(vertWorldPos);
-                    normalPositions.Add(newNormal);
+                    nodes.Add(node);
+                    objectVerts.Add(node.position);
                 }
-
-
             }
-            //add the checked object for later to stop double baking
-            m_objectPositions.Add(currentObject.transform.position);
-        
-
-
         }
-
-        for (int i = 0; i < nodePositions.Count; i++)
-        {
-
-            m_createdNodes.Add(new Node(m_nodeConnectionAmount, nodePositions[i], normalPositions[i]));
-        }
-        //foreach list make new nodes
-
+        Overlap(ref nodes);
         Debug.Log("CREATION PASSED");
     }
 
-    
+    public static void Overlap(ref List<nodeCheck> nodes)
+    {
+        List<nodeCheck> nodesToDelete = new List<nodeCheck>();
+        foreach (var nodeAlpha in nodes)
+        {
+            foreach (var nodeBeta in nodes)
+            {
+                //get the direction to beta from alpha and normalize for a directional vector
+                Vector3 alphaToBetaDir = Vector3.Normalize(nodeBeta.position - nodeAlpha.position);
+
+                if (Vector3.Dot(-nodeAlpha.normal, alphaToBetaDir) > 0.9f &&
+                    Mathf.Abs(nodeAlpha.position.y - nodeBeta.position.y) <= m_ySpaceLimit)
+                {
+                    if (nodeAlpha.position.y > nodeBeta.position.y)
+                        nodesToDelete.Add(nodeBeta);
+                    else
+                        nodesToDelete.Add(nodeAlpha);
+                }
+            }
+        }
+        foreach (var deletionNode in nodesToDelete)
+        {
+            nodes.Remove(deletionNode);
+        }
+        foreach (var VARIABLE in nodes)
+        {
+            m_createdNodes.Add(new Node(m_nodeConnectionAmount, VARIABLE.position, VARIABLE.normal));
+        }
+    }
     //Im going to have to change this to use the dot product so its not doing as many distance checks
     public static void LinkNodes(float a_nodeDistance, bool a_firstRun = true)
     {
