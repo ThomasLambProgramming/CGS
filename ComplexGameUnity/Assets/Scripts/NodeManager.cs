@@ -24,22 +24,22 @@ public class Node
     public Vector3 m_position = new Vector3(0,0,0);
     public int m_connectionAmount = 0;
     //this is the nodes normal for checking if other nodes need to be deleted
-    public Vector3 m_normal = new Vector3(0, 0, 0);
-    public Node(int a_nodeConnectionLimit, Vector3 a_position, Vector3 a_normal)
+ 
+    public Node(int a_nodeConnectionLimit, Vector3 a_position)
     {
         m_position = a_position;
         m_connectedNodes = new Node[a_nodeConnectionLimit];
-        m_normal = a_normal;
+     
         m_connectionAmount = 0;
     }
 }
 public class NodeManager : MonoBehaviour
 {
-    private static ComputeShader m_NodeLinkingShader = null;
+
     
     //Static variables for use by the whole system
     private static float m_nodeDistance = 5;
-    private static int m_nodeConnectionAmount = 4;
+    public static int m_nodeConnectionAmount = 4;
     private static int m_maxNodes = 1000;
     private static float m_ySpaceLimit = 1;
     
@@ -139,7 +139,7 @@ public class NodeManager : MonoBehaviour
         }
         foreach (var VARIABLE in nodes)
         {
-            m_createdNodes.Add(new Node(m_nodeConnectionAmount, VARIABLE.position, VARIABLE.normal));
+            m_createdNodes.Add(new Node(m_nodeConnectionAmount, VARIABLE.position));
         }
     }
     //Im going to have to change this to use the dot product so its not doing as many distance checks

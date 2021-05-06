@@ -26,7 +26,7 @@ public class AStar : MonoBehaviour
         if (NodeManager.m_nodeGraph == null)
             return null;
 
-        Node closestNode = new Node(0, new Vector3(), new Vector3());
+        Node closestNode = new Node(0, new Vector3());
         float distance = 1000000;
         foreach (Node node in NodeManager.m_nodeGraph)
         {

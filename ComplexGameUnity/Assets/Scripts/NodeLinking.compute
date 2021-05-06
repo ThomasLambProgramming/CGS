@@ -4,12 +4,47 @@
 
 RWTexture2D<float4> Result;
 
+/*
+    Divide node amount by 64 (we want thread groups of 64)
+    this tells us how many thread groups we want
+    amd can support 128 but nvidia is a bit weird with it so keeping to 64 is nice for both
+
+    new node = index in array (can also be id), position
+    edgeConnections = to this node, cost
 
 
-[numthreads(8,8,1)]
+
+*/
+
+
+
+
+const static int NodeConnectionLimit = 50;
+//i have no clue if this works
+class BaseNode
+{
+    //NEED A SOLUTION FOR THE LINKED NODES
+    float3 m_position;
+    int m_connectionAmount;
+    float3 m_normal;
+};
+class NodeConnection
+{
+    BaseNode bnode[NodeConnectionLimit];
+};
+class Node
+{
+    BaseNode node;
+    NodeConnection connections;
+};
+
+RWStructuredBuffer<Node> nodes;
+
+//i want each thread to check against one node
+[numthreads(1,1,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-    // TODO: insert actual code here!
+    
     
     Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
 }
