@@ -87,7 +87,7 @@ public class AStar : MonoBehaviour
                 return path;
             }
 
-            foreach(Node connection in currentNode.m_node.m_connectedNodes)
+            foreach(Edge connection in currentNode.m_node.m_connectedNodes)
             {
                 if (connection == null)
                     continue;
@@ -97,7 +97,7 @@ public class AStar : MonoBehaviour
                 bool isClosedNode = false;
                 foreach (PathNode closed in closedNodes)
                 {
-                    if (closed.m_node == connection)
+                    if (closed.m_node == connection.to)
                     { 
                         isClosedNode = true;
                         break;
@@ -109,7 +109,7 @@ public class AStar : MonoBehaviour
                 bool isOpen = false;
                 foreach (PathNode open in openNodes)
                 {
-                    if (open.m_node == connection)
+                    if (open.m_node == connection.to)
                     {
                         isOpen = true;
                         break;
@@ -118,10 +118,10 @@ public class AStar : MonoBehaviour
                 if (isOpen)
                     continue;
 
-                PathNode node = new PathNode(connection, currentNode);
+                PathNode node = new PathNode(connection.to, currentNode);
                 node.m_gCost = Vector3.Distance(node.m_node.m_position, currentNode.m_node.m_position) + currentNode.m_gCost;
 
-                float distanceToConnection = currentNode.m_gCost + Vector3.Distance(currentNode.m_node.m_position, connection.m_position);
+                float distanceToConnection = currentNode.m_gCost + Vector3.Distance(currentNode.m_node.m_position, connection.to.m_position);
                 node.m_hCost = Vector3.Distance(node.m_node.m_position, endNode.m_position);
                 openNodes.Add(node);
 

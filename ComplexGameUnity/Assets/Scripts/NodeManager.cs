@@ -3,45 +3,41 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Analytics;
-//NOTES FOR WHAT TO ADD OR REMOVE LATER
-//Include option for objects to be selected for normal or for y axis checks
-//get the object point (hopefully middle or bottom and do a direction dot product check for if the node will be above or below to remove verts
 
+//get the object point (hopefully middle or bottom and do a direction dot product check for if the node will be above or below to remove verts
 
 /*
     Optimization ideas
     sort the nodes by position (since the node graph has random access knowing the bounds of the x,z,y we can use binary search for the finding of closest nodes)
-
-    dot product for finding angles on objects instead of normal / square check
-
     possible griding of the nodegraph into sections with x,z bounds to tell if it needs to search the whole graph or not (can also use binary search as well here for finding grid distances and etc)
 
 */
 public class Node
 {
     //by making a preset i can make these nodes into an array 
-    public Node[] m_connectedNodes = null;
+    public Edge[] m_connectedNodes = null;
     public Vector3 m_position = new Vector3(0,0,0);
-    public int m_connectionAmount = 0;
+    
     //this is the nodes normal for checking if other nodes need to be deleted
- 
     public Node(int a_nodeConnectionLimit, Vector3 a_position)
     {
         m_position = a_position;
-        m_connectedNodes = new Node[a_nodeConnectionLimit];
-     
-        m_connectionAmount = 0;
+        m_connectedNodes = new Edge[a_nodeConnectionLimit];
     }
+}
+//For the gpu we need to seperate the class to not contain node itself as a connection as the gpu hates it
+public class Edge
+{
+    public Node to = null;
+    public float cost = 0;
 }
 public class NodeManager : MonoBehaviour
 {
-
-    
     //Static variables for use by the whole system
-    private static float m_nodeDistance = 5;
+    public static float m_nodeDistance = 5;
     public static int m_nodeConnectionAmount = 4;
-    private static int m_maxNodes = 1000;
-    private static float m_ySpaceLimit = 1;
+    public static int m_maxNodes = 1000;
+    public static float m_ySpaceLimit = 1;
     
     public static Node[] m_nodeGraph = null;
     
@@ -166,14 +162,14 @@ public class NodeManager : MonoBehaviour
                 {
                     if (VARIABLE == null)
                         continue;
-                    if (VARIABLE == node1)
+                    if (VARIABLE.to == node1)
                         hasDupe = true;
                 }
                 foreach (var VARIABLE in node1.m_connectedNodes)
                 {
                     if (VARIABLE == null)
                         continue;
-                    if (VARIABLE == node2)
+                    if (VARIABLE.to == node2)
                         hasDupe = true;
                 }
                 if (hasDupe)
@@ -186,33 +182,27 @@ public class NodeManager : MonoBehaviour
 
                 if (Vector3.Distance(node1.m_position, node2.m_position) < a_nodeDistance)
                 {
-                    //if the nodes have a spare slot then add eachother (for making it easy nodes have a current index
-                    //used amount so its easy to tell if all the connection amounts are full
-                    if (node1.m_connectionAmount < m_nodeConnectionAmount &&
-                        node2.m_connectionAmount < m_nodeConnectionAmount)
-                    {
-                        //checks to see what part of the array is null so we dont overwrite or add to something that doesnt have space.
+                    //checks to see what part of the array is null so we dont overwrite or add to something that doesnt have space.
                         for (int i = 0; i < m_nodeConnectionAmount; i++)
                         {
                             if (node1.m_connectedNodes[i] == null)
                             {
                                 //im making the weight for now have a heigher weight based on how much 
-                                node1.m_connectedNodes[i] = node2;
-                                node1.m_connectionAmount++;
+                                node1.m_connectedNodes[i] = new Edge();
+                                node1.m_connectedNodes[i].to = node2;
                                 break;
                             }
                         }
-
                         for (int i = 0; i < m_nodeConnectionAmount; i++)
                         {
                             if (node2.m_connectedNodes[i] == null)
                             {
-                                node2.m_connectedNodes[i] = node1;
-                                node2.m_connectionAmount++;
+                                node1.m_connectedNodes[i] = new Edge();
+                                node1.m_connectedNodes[i].to = node1;
                                 break;
                             }
                         }
-                    }
+                    
                 }
             }
         }
@@ -237,11 +227,11 @@ public class NodeManager : MonoBehaviour
 
         foreach (var node in m_nodeGraph)
         {
-            for(int i = 0; i < node.m_connectionAmount - 1; i++)
+            for(int i = 0; i < node.m_connectedNodes.Length - 1; i++)
             {
                 //if the connection isnt null then draw a line of it this whole function is self explaining
                 if (node.m_connectedNodes[i] != null)
-                    Debug.DrawLine(node.m_position,node.m_connectedNodes[i].m_position);
+                    Debug.DrawLine(node.m_position,node.m_connectedNodes[i].to.m_position);
             }
         }
         Debug.Log("DRAW PASSED");
