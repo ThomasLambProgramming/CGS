@@ -55,6 +55,10 @@ public class NodeManager : MonoBehaviour
         m_maxNodes = a_maxNodes;
         m_ySpaceLimit = a_yLimit;
     }
+    
+    //when creating the nodegraph we need the normal to do a underneath check for overlapped/unwanted nodes
+    //so we have a seperate class to do the checks then give the position so we arent storing a normal
+    //for no reason in the main node class
     public class nodeCheck
     {
         public Vector3 position;
@@ -88,6 +92,7 @@ public class NodeManager : MonoBehaviour
             {
                 bool canAdd = true;
                 nodeCheck node = new nodeCheck();
+                //get the world position of the vert from the main object
                 node.position = currentObject.transform.TransformPoint(vert);
                 node.normal = newNormal;
                 foreach (var VARIABLE in objectVerts)
@@ -105,20 +110,28 @@ public class NodeManager : MonoBehaviour
                 }
             }
         }
+        //give a ref so we arent double spawning the nodes
         Overlap(ref nodes);
         Debug.Log("CREATION PASSED");
     }
 
     public static void Overlap(ref List<nodeCheck> nodes)
     {
+        //making this second list allows us to cycle through the list without modifying it and breaking the
+        //for loop
         List<nodeCheck> nodesToDelete = new List<nodeCheck>();
         foreach (var nodeAlpha in nodes)
         {
             foreach (var nodeBeta in nodes)
             {
+                if (nodeAlpha == nodeBeta)
+                    continue;
+                
                 //get the direction to beta from alpha and normalize for a directional vector
                 Vector3 alphaToBetaDir = Vector3.Normalize(nodeBeta.position - nodeAlpha.position);
 
+                //we get the -y axis (-node normal) to check if the direction to node2 is similar enough to the -y axis
+                //which tells us if we have a unwanted node
                 if (Vector3.Dot(-nodeAlpha.normal, alphaToBetaDir) > 0.9f &&
                     Mathf.Abs(nodeAlpha.position.y - nodeBeta.position.y) <= m_ySpaceLimit)
                 {
@@ -143,9 +156,7 @@ public class NodeManager : MonoBehaviour
     {
         if (m_createdNodes == null)
             return;
-
         
-
         //loop each node over the whole collection for joining and deleting as needed
         //this needs to be changed to the graphics system soon instead of cpu loop
         foreach (var node1 in m_createdNodes)
