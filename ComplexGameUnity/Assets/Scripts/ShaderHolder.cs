@@ -4,38 +4,35 @@ using UnityEngine;
 
 public class ShaderHolder : MonoBehaviour
 {
-    public ComputeShader shader;
+    public static ComputeShader shader;
 
     public void Update()
     {
         if (Input.GetKeyDown(KeyCode.Return))
         {
 
-            //shader.SetFloat("name", value);
-            //xyz amounts of threads
-
-            //all the variables of the node
-            int sizeInBytes = sizeof(float) * 6 + sizeof(int);
-            //since storing a max amount of nodeconnections size * amount then all the other variables
-            int totalStride = sizeInBytes * NodeManager.m_nodeConnectionAmount + sizeInBytes;
-
-            ComputeBuffer nodeBuffer = new ComputeBuffer(1, sizeof(int));
-
-            int[] test = new int[1];
-            test[0] = 0; 
-            nodeBuffer.SetData(test);
-            int kernal = shader.FindKernel("Linker");
-            shader.SetBuffer(kernal, "nodes", nodeBuffer);
-            shader.SetInt("NodeConnectionLimit", NodeManager.m_nodeConnectionAmount);
-
-            //shader.Dispatch(kernal, NodeManager.m_NodeGraph.Length, 1, 1);
-            shader.Dispatch(kernal, 1, 1, 1);
-
-            int[] hello = new int[1];
-            nodeBuffer.GetData(hello);
-            Debug.Log(hello[0]);
-            nodeBuffer.Release();
+            
         }
 
+    }
+    public static int FindClosestNode(Vector3 a_position)
+    {
+        //position + edge size
+        int sizeOfNode = sizeof(float) * 3 + (sizeof(int) + sizeof(float)) * 6;
+        ComputeBuffer buffer = new ComputeBuffer(NodeManager.m_nodeGraph.Length, sizeOfNode);
+        buffer.SetData(NodeManager.m_nodeGraph);
+        int kernal = shader.FindKernel("FindClosest");
+        shader.SetBuffer(kernal, "nodes", buffer);
+        shader.SetFloats("findPosition", a_position[0]);
+
+        ComputeBuffer index = new ComputeBuffer(1, sizeof(int));
+        index.SetData(new int[1]);
+
+        shader.Dispatch(kernal, NodeManager.m_nodeGraph.Length, 1, 1);
+        int[] closestIndex = new int[1];
+        index.GetData(closestIndex);
+        index.Release();
+        buffer.Release();
+        return closestIndex[0];
     }
 }

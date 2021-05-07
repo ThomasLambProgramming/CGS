@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Analytics;
+using System.Runtime.InteropServices;
 
 //get the object point (hopefully middle or bottom and do a direction dot product check for if the node will be above or below to remove verts
 
@@ -12,22 +13,16 @@ using UnityEngine.Analytics;
     possible griding of the nodegraph into sections with x,z bounds to tell if it needs to search the whole graph or not (can also use binary search as well here for finding grid distances and etc)
 
 */
+[StructLayout(LayoutKind.Sequential)]
 public class Node
 {
     //by making a preset i can make these nodes into an array 
-    public Edge[] m_connectedNodes = null;
     public Vector3 m_position = new Vector3(0,0,0);
-    
-    //this is the nodes normal for checking if other nodes need to be deleted
-    public Node(int a_nodeConnectionLimit, Vector3 a_position)
-    {
-        m_position = a_position;
-        m_connectedNodes = new Edge[a_nodeConnectionLimit];
-    }
+    public int[] connectionID = new int[6];
+    public int[] connectionCost = new int[6];
     public Node(Vector3 a_position)
     {
         m_position = a_position;
-        m_connectedNodes = new Edge[NodeManager.m_nodeConnectionAmount];
     }
 }
 //For the gpu we need to seperate the class to not contain node itself as a connection as the gpu hates it
@@ -99,7 +94,6 @@ public class NodeManager : MonoBehaviour
         Overlap(ref nodes);
         Debug.Log("CREATION PASSED");
     }
-
     public static void Overlap(ref List<NodeCheck> nodes)
     {
         List<NodeCheck> nodesToDelete = new List<NodeCheck>();
@@ -144,18 +138,18 @@ public class NodeManager : MonoBehaviour
                     continue;
 
                 bool hasDupe = false;
-                foreach (var VARIABLE in m_nodeGraph[b].m_connectedNodes)
+                foreach (var VARIABLE in m_nodeGraph[b].connectionID)
                 {
                     if (VARIABLE == null)
                         continue;
-                    if (m_nodeGraph[VARIABLE.to] == m_nodeGraph[a])
+                    if (m_nodeGraph[VARIABLE] == m_nodeGraph[a])
                         hasDupe = true;
                 }
-                foreach (var VARIABLE in m_nodeGraph[a].m_connectedNodes)
+                foreach (var VARIABLE in m_nodeGraph[a].connectionID)
                 {
                     if (VARIABLE == null)
                         continue;
-                    if (m_nodeGraph[VARIABLE.to] == m_nodeGraph[b])
+                    if (m_nodeGraph[VARIABLE] == m_nodeGraph[b])
                         hasDupe = true;
                 }
                 if (hasDupe)
@@ -172,17 +166,17 @@ public class NodeManager : MonoBehaviour
                     //checks to see what part of the array is null so we dont overwrite or add to something that doesnt have space.
                     for (int i = 0; i < m_nodeConnectionAmount; i++)
                     {
-                        if (m_nodeGraph[a].m_connectedNodes[i] == null)
+                        if (m_nodeGraph[a].connectionID[i] == null)
                         {
-                            m_nodeGraph[a].m_connectedNodes[i] = new Edge(b);
+                            m_nodeGraph[a].connectionID[i] = b;
                             break;
                         }
                     }
                     for (int i = 0; i < m_nodeConnectionAmount; i++)
                     {
-                        if (m_nodeGraph[b].m_connectedNodes[i] == null)
+                        if (m_nodeGraph[b].connectionID[i] == null)
                         {
-                            m_nodeGraph[b].m_connectedNodes[i] = new Edge(a);
+                            m_nodeGraph[b].connectionID[i] = a;
                             break;
                         }
                     }
@@ -198,11 +192,11 @@ public class NodeManager : MonoBehaviour
 
         foreach (var node in m_nodeGraph)
         {
-            for(int i = 0; i < node.m_connectedNodes.Length - 1; i++)
+            for(int i = 0; i < node.connectionID.Length - 1; i++)
             {
                 //if the connection isnt null then draw a line of it this whole function is self explaining
-                if (node.m_connectedNodes[i] != null)
-                    Debug.DrawLine(node.m_position,m_nodeGraph[node.m_connectedNodes[i].to].m_position);
+                if (node.connectionID[i] != null)
+                    Debug.DrawLine(node.m_position,m_nodeGraph[node.connectionID[i]].m_position);
             }
         }
         Debug.Log("DRAW PASSED");

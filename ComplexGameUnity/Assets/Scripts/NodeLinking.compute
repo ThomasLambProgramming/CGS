@@ -1,5 +1,6 @@
 ﻿// Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel Linker
+#pragma kernel FindClosest
 
 /*
     Divide node amount by 64 (we want thread groups of 64)
@@ -8,36 +9,61 @@
 
     new node = index in array (can also be id), position
     edgeConnections = to this node, cost
-
-
-
 */
 
+//the nodeid will be the index of the node
+class Edge
+{
+    
+};
+class Node
+{
+    float3 position;
+    //memory in shaders sucks
+    int nodeId[6];
+    float cost[6];
+};
+class PathNode
+{
+    float m_totalCost;
+    float m_gCost;
+    float m_hCost;
+    float m_fCost;
+    Node m_node;
+    Node m_parent;
+};
 
-
-
-//const static int NodeConnectionLimit = 10;
-//
-////the nodeid will be the index of the node
-//class Edge
-//{
-//    int nodeId;
-//    float cost;
-//};
-//class Node
-//{
-//    float3 position;
-//    //i hate hlsl
-//    Edge connections[NodeConnectionLimit];
-//};
-
-
-//RWStructuredBuffer<Node> nodes;
+RWStructuredBuffer<Node> nodes;
 
 //i want each thread to check against one node
 [numthreads(1,1,1)]
 void Linker(uint3 id : SV_DispatchThreadID)
 {
 
+}
+
+//groupshared allows each thread to share some memory 
+groupshared float minDistance = 1000;
+groupshared int currentIndex = 0;
+
+RWStructuredBuffer<int> nodeIndex;
+float3 findPosition;
+[numthreads(1, 1, 1)]
+void FindClosest(uint3 id : SV_DispatchThreadID)
+{
+    
+    float x = nodes[id.x].position.x - findPosition.x;
+    float y = nodes[id.x].position.y - findPosition.y;
+    float z = nodes[id.x].position.z - findPosition.z;
+
+    float nodeDistance = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+
+    
+    if (nodeDistance < minDistance)
+    {
+        minDistance = nodeDistance;
+        currentIndex = id.x;
+        nodeIndex[0] = currentIndex;
+    }
 }
 

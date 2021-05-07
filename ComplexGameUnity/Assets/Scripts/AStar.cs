@@ -26,7 +26,7 @@ public class AStar : MonoBehaviour
         if (NodeManager.m_nodeGraph == null)
             return null;
 
-        Node closestNode = new Node(0, new Vector3());
+        Node closestNode = new Node(new Vector3());
         float distance = 1000000;
         foreach (Node node in NodeManager.m_nodeGraph)
         {
@@ -87,7 +87,7 @@ public class AStar : MonoBehaviour
                 return path;
             }
 
-            foreach(Edge connection in currentNode.m_node.m_connectedNodes)
+            foreach(var connection in currentNode.m_node.connectionID)
             {
                 if (connection == null)
                     continue;
@@ -97,7 +97,7 @@ public class AStar : MonoBehaviour
                 bool isClosedNode = false;
                 foreach (PathNode closed in closedNodes)
                 {
-                    if (closed.m_node == NodeManager.m_nodeGraph[connection.to])
+                    if (closed.m_node == NodeManager.m_nodeGraph[connection])
                     { 
                         isClosedNode = true;
                         break;
@@ -109,7 +109,7 @@ public class AStar : MonoBehaviour
                 bool isOpen = false;
                 foreach (PathNode open in openNodes)
                 {
-                    if (open.m_node == NodeManager.m_nodeGraph[connection.to])
+                    if (open.m_node == NodeManager.m_nodeGraph[connection])
                     {
                         isOpen = true;
                         break;
@@ -118,10 +118,10 @@ public class AStar : MonoBehaviour
                 if (isOpen)
                     continue;
 
-                PathNode node = new PathNode(NodeManager.m_nodeGraph[connection.to], currentNode);
+                PathNode node = new PathNode(NodeManager.m_nodeGraph[connection], currentNode);
                 node.m_gCost = Vector3.Distance(node.m_node.m_position, currentNode.m_node.m_position) + currentNode.m_gCost;
 
-                float distanceToConnection = currentNode.m_gCost + Vector3.Distance(currentNode.m_node.m_position, NodeManager.m_nodeGraph[connection.to].m_position);
+                float distanceToConnection = currentNode.m_gCost + Vector3.Distance(currentNode.m_node.m_position, NodeManager.m_nodeGraph[connection].m_position);
                 node.m_hCost = Vector3.Distance(node.m_node.m_position, endNode.m_position);
                 openNodes.Add(node);
 
