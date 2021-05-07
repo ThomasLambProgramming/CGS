@@ -24,30 +24,34 @@ public class Node
         m_position = a_position;
         m_connectedNodes = new Edge[a_nodeConnectionLimit];
     }
+    public Node(Vector3 a_position)
+    {
+        m_position = a_position;
+        m_connectedNodes = new Edge[NodeManager.m_nodeConnectionAmount];
+    }
 }
 //For the gpu we need to seperate the class to not contain node itself as a connection as the gpu hates it
 public class Edge
 {
-    public Node to = null;
+    //index of the nodegraph array
+    public int to = 0;
     public float cost = 0;
+    public Edge(int a_to, float a_cost = 0)
+    {
+        to = a_to;
+        cost = a_cost;
+    }
 }
 public class NodeManager : MonoBehaviour
 {
     //Static variables for use by the whole system
     public static float m_nodeDistance = 5;
-    public static int m_nodeConnectionAmount = 4;
+    public static int m_nodeConnectionAmount = 50000;
     public static int m_maxNodes = 1000;
     public static float m_ySpaceLimit = 1;
     
     public static Node[] m_nodeGraph = null;
-    
-    private static List<Node> m_createdNodes = new List<Node>();
-    
-    public static void ResetValues()
-    {
-        m_createdNodes = new List<Node>();
-        m_nodeGraph = null;
-    }
+        
     public static void ChangeValues(float a_nodeDistance, int a_connectionAmount, int a_maxNodes, float a_yLimit)
     {
         m_nodeDistance = a_nodeDistance;
@@ -55,44 +59,26 @@ public class NodeManager : MonoBehaviour
         m_maxNodes = a_maxNodes;
         m_ySpaceLimit = a_yLimit;
     }
-    
-    //when creating the nodegraph we need the normal to do a underneath check for overlapped/unwanted nodes
-    //so we have a seperate class to do the checks then give the position so we arent storing a normal
-    //for no reason in the main node class
-    public class nodeCheck
-    {
-        public Vector3 position;
-        public Vector3 normal;
-    }
-    
     public static void CreateNodes(int a_layerMask)
     {
-        //gets every gameobject (change later to be a selection of some sort, possibly layers or manual selection   
         GameObject[] foundObjects = FindObjectsOfType<GameObject>();
-        List<nodeCheck> nodes = new List<nodeCheck>();
+        List<NodeCheck> nodes = new List<NodeCheck>();
         
         foreach (GameObject currentObject in foundObjects)
         {
-            //if its a node goto next object
-            //this must be changed later to allow for masking and etc
             if (currentObject.CompareTag("Node"))
                 continue;
 
-            //if the object doesnt have a mesh next
             MeshFilter objectMesh = currentObject.GetComponent<MeshFilter>();
             if (objectMesh == null)
                 continue;
 
-            //we get the y default and get the transforms version so we get the correct y axis of the gameobject
             Vector3 newNormal = currentObject.transform.TransformDirection(new Vector3(0, 1, 0));
-            
-            //vertex positions of the current object to avoid overlaps and reduce entire list for loops
             List<Vector3> objectVerts = new List<Vector3>();
             foreach (var vert in objectMesh.sharedMesh.vertices)
             {
                 bool canAdd = true;
-                nodeCheck node = new nodeCheck();
-                //get the world position of the vert from the main object
+                NodeCheck node = new NodeCheck();
                 node.position = currentObject.transform.TransformPoint(vert);
                 node.normal = newNormal;
                 foreach (var VARIABLE in objectVerts)
@@ -110,28 +96,20 @@ public class NodeManager : MonoBehaviour
                 }
             }
         }
-        //give a ref so we arent double spawning the nodes
         Overlap(ref nodes);
         Debug.Log("CREATION PASSED");
     }
 
-    public static void Overlap(ref List<nodeCheck> nodes)
+    public static void Overlap(ref List<NodeCheck> nodes)
     {
-        //making this second list allows us to cycle through the list without modifying it and breaking the
-        //for loop
-        List<nodeCheck> nodesToDelete = new List<nodeCheck>();
+        List<NodeCheck> nodesToDelete = new List<NodeCheck>();
         foreach (var nodeAlpha in nodes)
         {
             foreach (var nodeBeta in nodes)
             {
                 if (nodeAlpha == nodeBeta)
                     continue;
-                
-                //get the direction to beta from alpha and normalize for a directional vector
                 Vector3 alphaToBetaDir = Vector3.Normalize(nodeBeta.position - nodeAlpha.position);
-
-                //we get the -y axis (-node normal) to check if the direction to node2 is similar enough to the -y axis
-                //which tells us if we have a unwanted node
                 if (Vector3.Dot(-nodeAlpha.normal, alphaToBetaDir) > 0.9f &&
                     Mathf.Abs(nodeAlpha.position.y - nodeBeta.position.y) <= m_ySpaceLimit)
                 {
@@ -143,94 +121,76 @@ public class NodeManager : MonoBehaviour
             }
         }
         foreach (var deletionNode in nodesToDelete)
-        {
             nodes.Remove(deletionNode);
-        }
+
+        m_nodeGraph = new Node[nodes.Count];
+        int index = 0;
         foreach (var VARIABLE in nodes)
         {
-            m_createdNodes.Add(new Node(m_nodeConnectionAmount, VARIABLE.position));
+            m_nodeGraph[index] = new Node(VARIABLE.position);
+            index++;
         }
     }
-    //Im going to have to change this to use the dot product so its not doing as many distance checks
     public static void LinkNodes(float a_nodeDistance, bool a_firstRun = true)
     {
-        if (m_createdNodes == null)
+        if (m_nodeGraph == null)
             return;
-        
-        //loop each node over the whole collection for joining and deleting as needed
-        //this needs to be changed to the graphics system soon instead of cpu loop
-        foreach (var node1 in m_createdNodes)
+   
+        for (int a = 0; a < m_nodeGraph.Length; a++)
         {
-            foreach (var node2 in m_createdNodes)
+            for (int b = 0; b < m_nodeGraph.Length; b++)
             {
-                //if same node goto next
-                if (node1 == node2)
+                if (m_nodeGraph[a] == m_nodeGraph[b])
                     continue;
-                
-                //Double up check, checks both current node's connections to see if they are already linked
+
                 bool hasDupe = false;
-                foreach (var VARIABLE in node2.m_connectedNodes)
+                foreach (var VARIABLE in m_nodeGraph[b].m_connectedNodes)
                 {
                     if (VARIABLE == null)
                         continue;
-                    if (VARIABLE.to == node1)
+                    if (m_nodeGraph[VARIABLE.to] == m_nodeGraph[a])
                         hasDupe = true;
                 }
-                foreach (var VARIABLE in node1.m_connectedNodes)
+                foreach (var VARIABLE in m_nodeGraph[a].m_connectedNodes)
                 {
                     if (VARIABLE == null)
                         continue;
-                    if (VARIABLE.to == node2)
+                    if (m_nodeGraph[VARIABLE.to] == m_nodeGraph[b])
                         hasDupe = true;
                 }
                 if (hasDupe)
                     continue;
 
-                //if distance between nodes less than set distance then we can add
-                //add a_nodeDistance tothe distance check when done
-                if (Vector3.Distance(node1.m_position, node2.m_position) > 1.3 && node1.m_position.y - node2.m_position.y == 0)
-                    continue; 
 
-                if (Vector3.Distance(node1.m_position, node2.m_position) < a_nodeDistance)
+                float distBetweenNodes = Vector3.Distance(m_nodeGraph[a].m_position, m_nodeGraph[b].m_position);
+                //this is to stop diagonals (i completly forget how this random stuff works)
+                if (distBetweenNodes > 1.3 && m_nodeGraph[a].m_position.y - m_nodeGraph[b].m_position.y == 0)
+                    continue;
+
+                if (distBetweenNodes < a_nodeDistance)
                 {
                     //checks to see what part of the array is null so we dont overwrite or add to something that doesnt have space.
-                        for (int i = 0; i < m_nodeConnectionAmount; i++)
+                    for (int i = 0; i < m_nodeConnectionAmount; i++)
+                    {
+                        if (m_nodeGraph[a].m_connectedNodes[i] == null)
                         {
-                            if (node1.m_connectedNodes[i] == null)
-                            {
-                                //im making the weight for now have a heigher weight based on how much 
-                                node1.m_connectedNodes[i] = new Edge();
-                                node1.m_connectedNodes[i].to = node2;
-                                break;
-                            }
+                            m_nodeGraph[a].m_connectedNodes[i] = new Edge(b);
+                            break;
                         }
-                        for (int i = 0; i < m_nodeConnectionAmount; i++)
+                    }
+                    for (int i = 0; i < m_nodeConnectionAmount; i++)
+                    {
+                        if (m_nodeGraph[b].m_connectedNodes[i] == null)
                         {
-                            if (node2.m_connectedNodes[i] == null)
-                            {
-                                node1.m_connectedNodes[i] = new Edge();
-                                node1.m_connectedNodes[i].to = node1;
-                                break;
-                            }
+                            m_nodeGraph[b].m_connectedNodes[i] = new Edge(a);
+                            break;
                         }
-                    
+                    }
                 }
             }
         }
-        
-        
-        m_nodeGraph = new Node[m_createdNodes.Count];
-
-        //add all nodes into the array
-        //This is not efficent to recreate entire containers but having the ability to random access
-        //nodes is a big performance increase (especially with the compute shaders) 
-        for (int i = 0; i < m_createdNodes.Count; i++)
-        {
-            m_nodeGraph[i] = m_createdNodes[i];
-        }
         Debug.Log("LINK PASSED");
     }
-    //This is a debug option
     public static void DrawNodes()
     {
         if (m_nodeGraph == null)
@@ -242,10 +202,17 @@ public class NodeManager : MonoBehaviour
             {
                 //if the connection isnt null then draw a line of it this whole function is self explaining
                 if (node.m_connectedNodes[i] != null)
-                    Debug.DrawLine(node.m_position,node.m_connectedNodes[i].to.m_position);
+                    Debug.DrawLine(node.m_position,m_nodeGraph[node.m_connectedNodes[i].to].m_position);
             }
         }
         Debug.Log("DRAW PASSED");
     }
-    
+    //when creating the nodegraph we need the normal to do a underneath check for overlapped/unwanted nodes
+    //so we have a seperate class to do the checks then give the position so we arent storing a normal
+    //for no reason in the main node class
+    public class NodeCheck
+    {
+        public Vector3 position;
+        public Vector3 normal;
+    }
 }

@@ -1,8 +1,5 @@
 ﻿// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel CSMain
-
-
-RWTexture2D<float4> Result;
+#pragma kernel Linker
 
 /*
     Divide node amount by 64 (we want thread groups of 64)
@@ -19,32 +16,28 @@ RWTexture2D<float4> Result;
 
 
 
-const static int NodeConnectionLimit = 50;
-//i have no clue if this works
-class BaseNode
-{
-    //NEED A SOLUTION FOR THE LINKED NODES
-    float3 m_position;
-    int m_connectionAmount;
-    float3 m_normal;
-};
-class NodeConnection
-{
-    BaseNode bnode[NodeConnectionLimit];
-};
-class Node
-{
-    BaseNode node;
-    NodeConnection connections;
-};
+//const static int NodeConnectionLimit = 10;
+//
+////the nodeid will be the index of the node
+//class Edge
+//{
+//    int nodeId;
+//    float cost;
+//};
+//class Node
+//{
+//    float3 position;
+//    //i hate hlsl
+//    Edge connections[NodeConnectionLimit];
+//};
 
-RWStructuredBuffer<Node> nodes;
+
+//RWStructuredBuffer<Node> nodes;
 
 //i want each thread to check against one node
 [numthreads(1,1,1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
+void Linker(uint3 id : SV_DispatchThreadID)
 {
-    
-    
-    Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+
 }
+
