@@ -14,13 +14,14 @@ using System.Runtime.InteropServices;
 
 */
 [StructLayout(LayoutKind.Sequential)]
-public class Node
+public class Node1
 {
     //by making a preset i can make these nodes into an array 
     public Vector3 m_position = new Vector3(0,0,0);
-    public int[] connectionID = new int[6];
+    //since i cant do null checks now because of the memory layout of compute shaders and the like i have to give them a default of -1
+    public int[] connectionID = {-1,-1,-1,-1,-1,-1};
     public int[] connectionCost = new int[6];
-    public Node(Vector3 a_position)
+    public Node1(Vector3 a_position)
     {
         m_position = a_position;
     }
@@ -45,7 +46,7 @@ public class NodeManager : MonoBehaviour
     public static int m_maxNodes = 1000;
     public static float m_ySpaceLimit = 1;
     
-    public static Node[] m_nodeGraph = null;
+    public static Node1[] m_nodeGraph = null;
         
     public static void ChangeValues(float a_nodeDistance, int a_connectionAmount, int a_maxNodes, float a_yLimit)
     {
@@ -117,11 +118,11 @@ public class NodeManager : MonoBehaviour
         foreach (var deletionNode in nodesToDelete)
             nodes.Remove(deletionNode);
 
-        m_nodeGraph = new Node[nodes.Count];
+        m_nodeGraph = new Node1[nodes.Count];
         int index = 0;
         foreach (var VARIABLE in nodes)
         {
-            m_nodeGraph[index] = new Node(VARIABLE.position);
+            m_nodeGraph[index] = new Node1(VARIABLE.position);
             index++;
         }
     }
@@ -140,14 +141,14 @@ public class NodeManager : MonoBehaviour
                 bool hasDupe = false;
                 foreach (var VARIABLE in m_nodeGraph[b].connectionID)
                 {
-                    if (VARIABLE == null)
+                    if (VARIABLE == -1)
                         continue;
                     if (m_nodeGraph[VARIABLE] == m_nodeGraph[a])
                         hasDupe = true;
                 }
                 foreach (var VARIABLE in m_nodeGraph[a].connectionID)
                 {
-                    if (VARIABLE == null)
+                    if (VARIABLE == -1)
                         continue;
                     if (m_nodeGraph[VARIABLE] == m_nodeGraph[b])
                         hasDupe = true;
@@ -166,7 +167,7 @@ public class NodeManager : MonoBehaviour
                     //checks to see what part of the array is null so we dont overwrite or add to something that doesnt have space.
                     for (int i = 0; i < m_nodeConnectionAmount; i++)
                     {
-                        if (m_nodeGraph[a].connectionID[i] == null)
+                        if (m_nodeGraph[a].connectionID[i] == -1)
                         {
                             m_nodeGraph[a].connectionID[i] = b;
                             break;
@@ -174,7 +175,7 @@ public class NodeManager : MonoBehaviour
                     }
                     for (int i = 0; i < m_nodeConnectionAmount; i++)
                     {
-                        if (m_nodeGraph[b].connectionID[i] == null)
+                        if (m_nodeGraph[b].connectionID[i] == -1)
                         {
                             m_nodeGraph[b].connectionID[i] = a;
                             break;
@@ -195,7 +196,7 @@ public class NodeManager : MonoBehaviour
             for(int i = 0; i < node.connectionID.Length - 1; i++)
             {
                 //if the connection isnt null then draw a line of it this whole function is self explaining
-                if (node.connectionID[i] != null)
+                if (node.connectionID[i] != -1)
                     Debug.DrawLine(node.m_position,m_nodeGraph[node.connectionID[i]].m_position);
             }
         }

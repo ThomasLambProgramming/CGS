@@ -28,8 +28,8 @@ public class Agent : MonoBehaviour
             if(Physics.Raycast(mainCam.ScreenPointToRay(Input.mousePosition), out hit, 9000.0f, ~0))
             {
                 start = hit.point;
-                Node closestNode = NodeManager.m_nodeGraph[ShaderHolder.FindClosestNode(hit.point)];
-                endObj.transform.position = closestNode.m_position;
+                Node1 closestNode1 = NodeManager.m_nodeGraph[ShaderHolder.FindClosestNode(hit.point)];
+                endObj.transform.position = closestNode1.m_position;
             }  
         }
         if (Input.GetMouseButtonDown(1))
@@ -38,8 +38,8 @@ public class Agent : MonoBehaviour
             if (Physics.Raycast(mainCam.ScreenPointToRay(Input.mousePosition), out hit, 9000.0f, ~0))
             {
                 end = hit.point;
-                Node closestNode = NodeManager.m_nodeGraph[ShaderHolder.FindClosestNode(hit.point)];
-                endObj.transform.position = closestNode.m_position;
+                Node1 closestNode1 = NodeManager.m_nodeGraph[ShaderHolder.FindClosestNode(hit.point)];
+                endObj.transform.position = closestNode1.m_position;
             }
         }
         if (Input.GetKeyDown(KeyCode.Space))

@@ -12,32 +12,32 @@ public class AStar : MonoBehaviour
         public float m_gCost = 0;
         public float m_hCost = 0;
         public float m_fCost {get { return m_gCost + m_hCost; } }
-        public Node m_node = null;
+        public Node1 MNode1 = null;
         public PathNode m_parent = null;
 
-        public PathNode(Node a_node, PathNode a_parent)
+        public PathNode(Node1 a_node1, PathNode a_parent)
         {
-            m_node = a_node;
+            MNode1 = a_node1;
             m_parent = a_parent;
         }
     }
-    public static Node FindClosestNode(Vector3 a_position)
+    public static Node1 FindClosestNode(Vector3 a_position)
     {
         if (NodeManager.m_nodeGraph == null)
             return null;
 
-        Node closestNode = new Node(new Vector3());
+        Node1 closestNode1 = new Node1(new Vector3());
         float distance = 1000000;
-        foreach (Node node in NodeManager.m_nodeGraph)
+        foreach (Node1 node in NodeManager.m_nodeGraph)
         {
             float nodeDist = Vector3.Distance(node.m_position, a_position);
             if (nodeDist < distance)
             {
                 distance = nodeDist;
-                closestNode = node;
+                closestNode1 = node;
             }
         }
-        return closestNode;
+        return closestNode1;
     }
     public static List<Vector3> Pathfind(Vector3 a_startPos, Vector3 a_endPos)
     {
@@ -47,13 +47,13 @@ public class AStar : MonoBehaviour
         //find the closest node from the start and finish, after the path is found there will be an additional
         //check that can be performed to see if the point can be reached after the path (eg the closest may be at the
         //start of a mountain but there are no nodes and the end point is the peak)
-        Node startNode = FindClosestNode(a_startPos);
-        Node endNode = FindClosestNode(a_endPos);
+        Node1 startNode1 = FindClosestNode(a_startPos);
+        Node1 endNode1 = FindClosestNode(a_endPos);
 
         //giving it null as it is the starting node
-        PathNode start = new PathNode(startNode, null);
+        PathNode start = new PathNode(startNode1, null);
         start.m_gCost = 0;
-        start.m_hCost = Vector3.Distance(start.m_node.m_position, endNode.m_position);
+        start.m_hCost = Vector3.Distance(start.MNode1.m_position, endNode1.m_position);
         openNodes.Add(start);
 
        
@@ -70,26 +70,26 @@ public class AStar : MonoBehaviour
             openNodes.Remove(currentNode);
             closedNodes.Add(currentNode);
 
-            if (currentNode.m_node == endNode)
+            if (currentNode.MNode1 == endNode1)
             {
                 //We found the end node pathfinding is done
                 List<Vector3> path = new List<Vector3>();
                 //add the current/end node so that its just the parents being added in the loop
-                path.Add(currentNode.m_node.m_position);
+                path.Add(currentNode.MNode1.m_position);
                 while (currentNode.m_parent != null)
                 {
                     path.Add(new Vector3(
-                        currentNode.m_parent.m_node.m_position.x,
-                        currentNode.m_parent.m_node.m_position.y,
-                        currentNode.m_parent.m_node.m_position.z));
+                        currentNode.m_parent.MNode1.m_position.x,
+                        currentNode.m_parent.MNode1.m_position.y,
+                        currentNode.m_parent.MNode1.m_position.z));
                     currentNode = currentNode.m_parent;
                 }
                 return path;
             }
 
-            foreach(var connection in currentNode.m_node.connectionID)
+            foreach(var connection in currentNode.MNode1.connectionID)
             {
-                if (connection == null)
+                if (connection == -1)
                     continue;
                 //we need a travelable setting (nevermind this was a layermask for obsticles)
 
@@ -97,7 +97,7 @@ public class AStar : MonoBehaviour
                 bool isClosedNode = false;
                 foreach (PathNode closed in closedNodes)
                 {
-                    if (closed.m_node == NodeManager.m_nodeGraph[connection])
+                    if (closed.MNode1 == NodeManager.m_nodeGraph[connection])
                     { 
                         isClosedNode = true;
                         break;
@@ -109,7 +109,7 @@ public class AStar : MonoBehaviour
                 bool isOpen = false;
                 foreach (PathNode open in openNodes)
                 {
-                    if (open.m_node == NodeManager.m_nodeGraph[connection])
+                    if (open.MNode1 == NodeManager.m_nodeGraph[connection])
                     {
                         isOpen = true;
                         break;
@@ -119,10 +119,10 @@ public class AStar : MonoBehaviour
                     continue;
 
                 PathNode node = new PathNode(NodeManager.m_nodeGraph[connection], currentNode);
-                node.m_gCost = Vector3.Distance(node.m_node.m_position, currentNode.m_node.m_position) + currentNode.m_gCost;
+                node.m_gCost = Vector3.Distance(node.MNode1.m_position, currentNode.MNode1.m_position) + currentNode.m_gCost;
 
-                float distanceToConnection = currentNode.m_gCost + Vector3.Distance(currentNode.m_node.m_position, NodeManager.m_nodeGraph[connection].m_position);
-                node.m_hCost = Vector3.Distance(node.m_node.m_position, endNode.m_position);
+                float distanceToConnection = currentNode.m_gCost + Vector3.Distance(currentNode.MNode1.m_position, NodeManager.m_nodeGraph[connection].m_position);
+                node.m_hCost = Vector3.Distance(node.MNode1.m_position, endNode1.m_position);
                 openNodes.Add(node);
 
             }

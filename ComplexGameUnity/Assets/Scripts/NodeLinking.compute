@@ -12,18 +12,14 @@
 */
 
 //the nodeid will be the index of the node
-class Edge
-{
-    
-};
-class Node
+struct Node
 {
     float3 position;
     //memory in shaders sucks
-    int nodeId[6];
-    float cost[6];
+    int nodeId;
+    float cost;
 };
-class PathNode
+struct PathNode
 {
     float m_totalCost;
     float m_gCost;
