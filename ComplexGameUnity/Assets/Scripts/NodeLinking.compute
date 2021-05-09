@@ -11,6 +11,32 @@
     edgeConnections = to this node, cost
 */
 
+/*
+    MEMORY LAYOUT,
+    Currently the options are to try and get marshalling to work correctly, (which has like no helpful info)
+    preset amounts of connections baked into the class/struct of the node on the cpu
+    having a merger struct (this would be easiest but would also be the slowest as there would need to be a transfer done)
+
+    marshalling is with teh structlayout command to link them,
+
+    preset amounts would require me to make 8 or so connections with no arrays because for some reason compute buffers hate arrays
+    and then fill them one by one which would be aweful
+
+    the merger struct is probably what i will need to do. have the normal node and allow it to have any amount of connections
+    have all the code go off length so it can do that, but then when going into the compute shader have the readme tell the user that
+    they need to increase the amount in the struct buffer on the compute shader and the merger struct
+*/
+
+
+
+
+
+
+
+
+
+
+
 //the nodeid will be the index of the node
 struct Node
 {
