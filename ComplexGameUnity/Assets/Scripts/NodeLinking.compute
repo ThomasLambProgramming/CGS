@@ -26,17 +26,6 @@
     have all the code go off length so it can do that, but then when going into the compute shader have the readme tell the user that
     they need to increase the amount in the struct buffer on the compute shader and the merger struct
 */
-
-
-
-
-
-
-
-
-
-
-
 //the nodeid will be the index of the node
 struct Node
 {

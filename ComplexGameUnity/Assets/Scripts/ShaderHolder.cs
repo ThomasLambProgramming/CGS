@@ -39,6 +39,7 @@ public class ShaderHolder : MonoBehaviour
         buffer.SetData(test);
         int kernal = shader.FindKernel("FindClosest");
         shader.SetBuffer(kernal, "nodes", buffer);
+        
         shader.Dispatch(kernal, NodeManager.m_nodeGraph.Length, 1, 1);
         buffer.Release();
         buffer.Dispose();

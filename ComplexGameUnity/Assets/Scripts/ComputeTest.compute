@@ -1,0 +1,24 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+struct Edge
+{
+    int to;
+    float cost;
+};
+struct Node
+{
+    int node;
+    Edge edges[6];
+};
+RWStructuredBuffer<Node> nodes;
+
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+
+    
+}
