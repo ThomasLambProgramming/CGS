@@ -19,7 +19,7 @@ public class Node
 public class Edge
 {
     //index of the nodegraph array
-    public int to = 0;
+    public int to = -1;
     public float cost = 0;
     public Edge(int a_to, float a_cost = 0)
     {

@@ -119,9 +119,16 @@ public class ShaderHolder : MonoBehaviour
         shader.SetBuffer(kernal, "nodeConnections", nodeConnections);
         shader.Dispatch(kernal, nodeAmount, 1, 1);
 
+        
+
         //we are getting the costs of all the connections so we have to update the connections array to give it to the pathfinding 
         //kernal
         nodeConnections.GetData(connections);
+
+        foreach(var temp in connections)
+        {
+            Debug.Log(temp.connection1Cost);
+        }
         nodeConnections.SetData(connections);
 
 
@@ -134,9 +141,10 @@ public class ShaderHolder : MonoBehaviour
         shader.Dispatch(kernal, 1, 1, 1);
 
         
-
-
-
+        
+        
+        nodePositions.Release();
+        nodeConnections.Release();
     }
     
     

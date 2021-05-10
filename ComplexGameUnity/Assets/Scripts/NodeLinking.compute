@@ -36,10 +36,34 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     
 }
 
+//this will be split between nodes
 [numthreads(1, 1, 1)]
 void Distance(uint3 id : SV_DispatchThreadID)
 {
-  
+    if (nodeConnections[id.x].connection1 != -1)
+    {
+        nodeConnections[id.x].connection1Cost = sqrt(distance(nodePositions[id.x].position, nodePositions[nodeConnections[id.x].connection1].position));
+    }
+    if (nodeConnections[id.x].connection2 != -1)
+    {
+        nodeConnections[id.x].connection2Cost = sqrt(distance(nodePositions[id.x].position, nodePositions[nodeConnections[id.x].connection2].position));
+    }
+    if (nodeConnections[id.x].connection3 != -1)
+    {
+        nodeConnections[id.x].connection3Cost = sqrt(distance(nodePositions[id.x].position, nodePositions[nodeConnections[id.x].connection3].position));
+    }
+    if (nodeConnections[id.x].connection4 != -1)
+    {
+        nodeConnections[id.x].connection4Cost = sqrt(distance(nodePositions[id.x].position, nodePositions[nodeConnections[id.x].connection4].position));
+    }
+    if (nodeConnections[id.x].connection5 != -1)
+    {
+        nodeConnections[id.x].connection5Cost = sqrt(distance(nodePositions[id.x].position, nodePositions[nodeConnections[id.x].connection5].position));
+    }
+    if (nodeConnections[id.x].connection6 != -1)
+    {
+        nodeConnections[id.x].connection6Cost = sqrt(distance(nodePositions[id.x].position, nodePositions[nodeConnections[id.x].connection6].position));
+    }
 
 }
 

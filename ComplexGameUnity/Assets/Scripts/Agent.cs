@@ -40,12 +40,6 @@ public class Agent : MonoBehaviour
                 end = hit.point;
                 Node closestNode1 = AStar.FindClosestNode(hit.point);
                 endObj.transform.position = closestNode1.m_position;
-            }
-        }
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            if (start != null && end != null)
-            {
                 path = AStar.Pathfind(start, end);
                 line.positionCount = path.Count;
                 for (int i = 0; i < path.Count; i++)
@@ -54,5 +48,6 @@ public class Agent : MonoBehaviour
                 }
             }
         }
+        
     }
 }
