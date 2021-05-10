@@ -5,28 +5,17 @@ using UnityEngine;
 using UnityEngine.Analytics;
 using System.Runtime.InteropServices;
 
-//get the object point (hopefully middle or bottom and do a direction dot product check for if the node will be above or below to remove verts
-
-/*
-    Optimization ideas
-    sort the nodes by position (since the node graph has random access knowing the bounds of the x,z,y we can use binary search for the finding of closest nodes)
-    possible griding of the nodegraph into sections with x,z bounds to tell if it needs to search the whole graph or not (can also use binary search as well here for finding grid distances and etc)
-
-*/
-[StructLayout(LayoutKind.Sequential)]
-public class Node1
+public class Node
 {
-    //by making a preset i can make these nodes into an array 
     public Vector3 m_position = new Vector3(0,0,0);
-    //since i cant do null checks now because of the memory layout of compute shaders and the like i have to give them a default of -1
-    public int[] connectionID = {-1,-1,-1,-1,-1,-1};
-    public int[] connectionCost = new int[6];
-    public Node1(Vector3 a_position)
+    public Edge[] connections = new Edge[6];
+    public Node(Vector3 a_position)
     {
         m_position = a_position;
+
     }
 }
-//For the gpu we need to seperate the class to not contain node itself as a connection as the gpu hates it
+
 public class Edge
 {
     //index of the nodegraph array
@@ -46,7 +35,7 @@ public class NodeManager : MonoBehaviour
     public static int m_maxNodes = 1000;
     public static float m_ySpaceLimit = 1;
     
-    public static Node1[] m_nodeGraph = null;
+    public static Node[] m_nodeGraph = null;
         
     public static void ChangeValues(float a_nodeDistance, int a_connectionAmount, int a_maxNodes, float a_yLimit)
     {
@@ -55,6 +44,7 @@ public class NodeManager : MonoBehaviour
         m_maxNodes = a_maxNodes;
         m_ySpaceLimit = a_yLimit;
     }
+
     public static void CreateNodes(int a_layerMask)
     {
         GameObject[] foundObjects = FindObjectsOfType<GameObject>();
@@ -118,11 +108,11 @@ public class NodeManager : MonoBehaviour
         foreach (var deletionNode in nodesToDelete)
             nodes.Remove(deletionNode);
 
-        m_nodeGraph = new Node1[nodes.Count];
+        m_nodeGraph = new Node[nodes.Count];
         int index = 0;
         foreach (var VARIABLE in nodes)
         {
-            m_nodeGraph[index] = new Node1(VARIABLE.position);
+            m_nodeGraph[index] = new Node(VARIABLE.position);
             index++;
         }
     }
@@ -139,18 +129,18 @@ public class NodeManager : MonoBehaviour
                     continue;
 
                 bool hasDupe = false;
-                foreach (var VARIABLE in m_nodeGraph[b].connectionID)
+                foreach (var VARIABLE in m_nodeGraph[b].connections)
                 {
-                    if (VARIABLE == -1)
+                    if (VARIABLE == null)
                         continue;
-                    if (m_nodeGraph[VARIABLE] == m_nodeGraph[a])
+                    if (m_nodeGraph[VARIABLE.to] == m_nodeGraph[a])
                         hasDupe = true;
                 }
-                foreach (var VARIABLE in m_nodeGraph[a].connectionID)
+                foreach (var VARIABLE in m_nodeGraph[a].connections)
                 {
-                    if (VARIABLE == -1)
+                    if (VARIABLE == null)
                         continue;
-                    if (m_nodeGraph[VARIABLE] == m_nodeGraph[b])
+                    if (m_nodeGraph[VARIABLE.to] == m_nodeGraph[b])
                         hasDupe = true;
                 }
                 if (hasDupe)
@@ -167,17 +157,17 @@ public class NodeManager : MonoBehaviour
                     //checks to see what part of the array is null so we dont overwrite or add to something that doesnt have space.
                     for (int i = 0; i < m_nodeConnectionAmount; i++)
                     {
-                        if (m_nodeGraph[a].connectionID[i] == -1)
+                        if (m_nodeGraph[a].connections[i] == null)
                         {
-                            m_nodeGraph[a].connectionID[i] = b;
+                            m_nodeGraph[a].connections[i] = new Edge(b);
                             break;
                         }
                     }
                     for (int i = 0; i < m_nodeConnectionAmount; i++)
                     {
-                        if (m_nodeGraph[b].connectionID[i] == -1)
+                        if (m_nodeGraph[b].connections[i] == null)
                         {
-                            m_nodeGraph[b].connectionID[i] = a;
+                            m_nodeGraph[b].connections[i] = new Edge(a);
                             break;
                         }
                     }
@@ -193,11 +183,11 @@ public class NodeManager : MonoBehaviour
 
         foreach (var node in m_nodeGraph)
         {
-            for(int i = 0; i < node.connectionID.Length - 1; i++)
+            for(int i = 0; i < node.connections.Length - 1; i++)
             {
                 //if the connection isnt null then draw a line of it this whole function is self explaining
-                if (node.connectionID[i] != -1)
-                    Debug.DrawLine(node.m_position,m_nodeGraph[node.connectionID[i]].m_position);
+                if (node.connections[i] != null)
+                    Debug.DrawLine(node.m_position,m_nodeGraph[node.connections[i].to].m_position);
             }
         }
         Debug.Log("DRAW PASSED");
