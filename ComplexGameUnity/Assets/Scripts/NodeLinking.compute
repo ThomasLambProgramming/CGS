@@ -1,80 +1,48 @@
 ﻿// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel Linker
-#pragma kernel FindClosest
+#pragma kernel CSMain
+#pragma kernel Distance
 
-/*
-    Divide node amount by 64 (we want thread groups of 64)
-    this tells us how many thread groups we want
-    amd can support 128 but nvidia is a bit weird with it so keeping to 64 is nice for both
 
-    new node = index in array (can also be id), position
-    edgeConnections = to this node, cost
-*/
-
-/*
-    MEMORY LAYOUT,
-    Currently the options are to try and get marshalling to work correctly, (which has like no helpful info)
-    preset amounts of connections baked into the class/struct of the node on the cpu
-    having a merger struct (this would be easiest but would also be the slowest as there would need to be a transfer done)
-
-    marshalling is with teh structlayout command to link them,
-
-    preset amounts would require me to make 8 or so connections with no arrays because for some reason compute buffers hate arrays
-    and then fill them one by one which would be aweful
-
-    the merger struct is probably what i will need to do. have the normal node and allow it to have any amount of connections
-    have all the code go off length so it can do that, but then when going into the compute shader have the readme tell the user that
-    they need to increase the amount in the struct buffer on the compute shader and the merger struct
-*/
-//the nodeid will be the index of the node
-struct Node
+//----------DATA-------------
+struct NodePosition
 {
     float3 position;
-    //memory in shaders sucks
-    int nodeId;
-    float cost;
 };
-struct PathNode
+struct NodeEdge
 {
-    float m_totalCost;
-    float m_gCost;
-    float m_hCost;
-    float m_fCost;
-    Node m_node;
-    Node m_parent;
+    int connection1;
+    int connection2;
+    int connection3;
+    int connection4;
+    int connection5;
+    int connection6;
+    float connection1Cost;
+    float connection2Cost;
+    float connection3Cost;
+    float connection4Cost;
+    float connection5Cost;
+    float connection6Cost;
 };
+int nodeAmount;
+RWStructuredBuffer<NodePosition> nodePositions;
+RWStructuredBuffer<NodeEdge> nodeConnections;
+//----------------------------
 
-RWStructuredBuffer<Node> nodes;
-
-//i want each thread to check against one node
-[numthreads(1,1,1)]
-void Linker(uint3 id : SV_DispatchThreadID)
+//Divide the node amount by 32 for the amount of dispatches needed (32 is nvidia and 64 is amd so
+//for ease of use we use 32)
+[numthreads(32,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
 {
-
+    
 }
 
-//groupshared allows each thread to share some memory 
-groupshared float minDistance = 1000;
-groupshared int currentIndex = 0;
-
-RWStructuredBuffer<int> nodeIndex;
-float3 findPosition;
 [numthreads(1, 1, 1)]
-void FindClosest(uint3 id : SV_DispatchThreadID)
+void Distance(uint3 id : SV_DispatchThreadID)
 {
-    
-    float x = nodes[id.x].position.x - findPosition.x;
-    float y = nodes[id.x].position.y - findPosition.y;
-    float z = nodes[id.x].position.z - findPosition.z;
+  
 
-    float nodeDistance = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
-
-    
-    if (nodeDistance < minDistance)
-    {
-        minDistance = nodeDistance;
-        currentIndex = id.x;
-        nodeIndex[0] = currentIndex;
-    }
 }
 
+
+//this will have to be a kernal for  the one agents path because dividing all this is going to be horrible
+//rather then seeing how to split the work and do it per agent (i could have it just do 4 threads per agent asking)
