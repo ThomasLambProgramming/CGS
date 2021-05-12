@@ -18,10 +18,14 @@ public class Agent : MonoBehaviour
     void Start()
     {
         line = GetComponent<LineRenderer>();
+        if (NodeManager.m_nodeGraph == null)
+        {
+            NodeManager.m_nodeGraph = SaveSystem.LoadNodes();
+        }
     }
-
+    
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {

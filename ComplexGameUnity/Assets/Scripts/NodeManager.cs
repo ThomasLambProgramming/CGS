@@ -5,17 +5,18 @@ using UnityEngine;
 using UnityEngine.Analytics;
 using System.Runtime.InteropServices;
 
+[SerializeField]
 public class Node
 {
     public Vector3 m_position = new Vector3(0,0,0);
-    public Edge[] connections = new Edge[6];
+    public Edge[] connections = new Edge[NodeManager.m_nodeConnectionAmount];
     public Node(Vector3 a_position)
     {
         m_position = a_position;
 
     }
 }
-
+[SerializeField]
 public class Edge
 {
     //index of the nodegraph array
