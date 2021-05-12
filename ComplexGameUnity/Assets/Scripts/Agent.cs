@@ -1,12 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Collections;
 
 public class Agent : MonoBehaviour
 {
-    List<Vector3> path = new List<Vector3>();
-    private Vector3 start;
-    private Vector3 end;
+    Vector3[] path = null;
+    public static Vector3 start;
+    public static Vector3 end;
 
     public GameObject startObj = null;
     public GameObject endObj = null;
@@ -28,7 +29,7 @@ public class Agent : MonoBehaviour
             if(Physics.Raycast(mainCam.ScreenPointToRay(Input.mousePosition), out hit, 9000.0f, ~0))
             {
                 start = hit.point;
-                Node closestNode1 = AStar.FindClosestNode(hit.point);
+                Node closestNode1 = NodeManager.m_nodeGraph[NodeUtility.FindClosestNode(hit.point)];
                 startObj.transform.position = closestNode1.m_position;
             }  
         }
@@ -38,14 +39,30 @@ public class Agent : MonoBehaviour
             if (Physics.Raycast(mainCam.ScreenPointToRay(Input.mousePosition), out hit, 9000.0f, ~0))
             {
                 end = hit.point;
-                Node closestNode1 = AStar.FindClosestNode(hit.point);
-                endObj.transform.position = closestNode1.m_position;
-                path = AStar.Pathfind(start, end);
-                line.positionCount = path.Count;
-                for (int i = 0; i < path.Count; i++)
+
+                PathFindJob pathfind = new PathFindJob();
+                Vector3[] tempVectors = { start, end };
+                NativeArray<Vector3> startEndPos = new NativeArray<Vector3>(tempVectors, Allocator.TempJob);
+                pathfind.startEndPos = startEndPos;
+
+                pathfind.Execute();
+
+                path = new Vector3[pathfind.pathResult.Length];
+                pathfind.pathResult.CopyTo(path);
+
+                pathfind.pathResult.Dispose();
+                startEndPos.Dispose();
+                
+                
+                //path = NodeUtility.Pathfind(start, end);
+                line.positionCount = path.Length;
+                for (int i = 0; i < path.Length; i++)
                 {
                     line.SetPosition(i, path[i]);
                 }
+                endObj.transform.position = path[0];
+
+
             }
         }
         
