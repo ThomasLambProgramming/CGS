@@ -52,7 +52,6 @@ public class NodeGraphWindow : EditorWindow
             NodeManager.CreateNodes(m_layerMask);
             NodeManager.LinkNodes(m_nodeDistance);
             Debug.Log(Time.realtimeSinceStartup - time);
-            SaveSystem.SaveNodes();
         }
         if (GUILayout.Button("Show Links"))
         {

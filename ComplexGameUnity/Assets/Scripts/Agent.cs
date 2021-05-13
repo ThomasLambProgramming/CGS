@@ -18,10 +18,6 @@ public class Agent : MonoBehaviour
     void Start()
     {
         line = GetComponent<LineRenderer>();
-        if (NodeManager.m_nodeGraph == null)
-        {
-            NodeManager.m_nodeGraph = SaveSystem.LoadNodes();
-        }
     }
     
     // Update is called once per frame
@@ -44,11 +40,13 @@ public class Agent : MonoBehaviour
             {
                 end = hit.point;
 
+                float time = Time.realtimeSinceStartup;
                 PathFindJob pathfind = new PathFindJob();
                 Vector3[] tempVectors = { start, end };
                 NativeArray<Vector3> startEndPos = new NativeArray<Vector3>(tempVectors, Allocator.TempJob);
                 pathfind.startEndPos = startEndPos;
 
+                
                 pathfind.Execute();
 
                 path = new Vector3[pathfind.pathResult.Length];
@@ -56,8 +54,10 @@ public class Agent : MonoBehaviour
 
                 pathfind.pathResult.Dispose();
                 startEndPos.Dispose();
-                
-                
+
+                Debug.Log(Time.realtimeSinceStartup - time);
+
+
                 //path = NodeUtility.Pathfind(start, end);
                 line.positionCount = path.Length;
                 for (int i = 0; i < path.Length; i++)
