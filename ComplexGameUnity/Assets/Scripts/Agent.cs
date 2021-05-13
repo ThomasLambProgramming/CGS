@@ -5,7 +5,6 @@ using Unity.Collections;
 
 public class Agent : MonoBehaviour
 {
-    public GameObject pathpos = null;
     public float moveSpeed = 10f;
     public float goNextDist = 2f;
     private float actualGotoNext;
@@ -45,8 +44,47 @@ public class Agent : MonoBehaviour
     }
     private void GetNewPath()
     {
-        path = AgentUtility.GetRandomPath(transform.position);
+        path = GetRandomPath(transform.position);
         currentIndex = 0;
         transform.LookAt(path[currentIndex]);
     }
+    private Vector3[] FindPath(Vector3 a_startPosition, Vector3 a_endPosition)
+    {
+        if (NodeManager.m_nodeGraph == null)
+        {
+            Debug.Log("There is no node graph! Please create one from the node window" +
+                "Window/NodeGraph.");
+            return null;
+        }
+
+        Vector3[] path;
+        PathFindJob pathfind = new PathFindJob();
+        Vector3[] tempVectors = { a_startPosition, a_endPosition };
+        NativeArray<Vector3> startEndPos = new NativeArray<Vector3>(tempVectors, Allocator.Temp);
+        pathfind.startEndPos = startEndPos;
+
+        //test for path finding time will need to improve the memory grabbing though its a bit slow and can be grouped
+        //float time = Time.realtimeSinceStartup;
+        pathfind.Execute();
+        //Debug.Log(Time.realtimeSinceStartup - time);
+        if (!pathfind.pathResult.IsCreated)
+        {
+            if (startEndPos.IsCreated)
+                startEndPos.Dispose();
+            Debug.Log("Pathresult was null");
+            return null;
+        }
+        path = pathfind.pathResult.ToArray();
+        pathfind.pathResult.Dispose();
+        startEndPos.Dispose();
+
+        return path;
+    }
+    private Vector3[] GetRandomPath(Vector3 a_objectPosition)
+    {
+        //yes this is horrible
+        return FindPath(a_objectPosition,new Vector3(Random.Range(-50.0f,50.0f),0,Random.Range(-50.0f,50.0f)));
+    }
 }
+
+

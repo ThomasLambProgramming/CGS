@@ -1,7 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using Unity.Collections;
+using Unity.Jobs;
 public class tempAgent : MonoBehaviour
 {
 
@@ -44,8 +45,8 @@ public class tempAgent : MonoBehaviour
                 if (start != null && end != null)
                 {
 
-                    path = AgentUtility.FindPath(start, end);
-
+                    path = FindPath(start, end);
+                    
 
                     //path = NodeUtility.Pathfind(start, end);
                     line.positionCount = path.Length;
@@ -59,5 +60,37 @@ public class tempAgent : MonoBehaviour
             }
         }
 
+    }
+    private Vector3[] FindPath(Vector3 a_startPosition, Vector3 a_endPosition)
+    {
+        if (NodeManager.m_nodeGraph == null)
+        {
+            Debug.Log("There is no node graph! Please create one from the node window" +
+                "Window/NodeGraph.");
+            return null;
+        }
+
+        Vector3[] path;
+        PathFindJob pathfind = new PathFindJob();
+        Vector3[] tempVectors = { a_startPosition, a_endPosition };
+        NativeArray<Vector3> startEndPos = new NativeArray<Vector3>(tempVectors, Allocator.Temp);
+        pathfind.startEndPos = startEndPos;
+
+        //test for path finding time will need to improve the memory grabbing though its a bit slow and can be grouped
+        //float time = Time.realtimeSinceStartup;
+        pathfind.Execute();
+        //Debug.Log(Time.realtimeSinceStartup - time);
+        if (!pathfind.pathResult.IsCreated)
+        {
+            if (startEndPos.IsCreated)
+                startEndPos.Dispose();
+            Debug.Log("Pathresult was null");
+            return null;
+        }
+        path = pathfind.pathResult.ToArray();
+        pathfind.pathResult.Dispose();
+        startEndPos.Dispose();
+
+        return path;
     }
 }

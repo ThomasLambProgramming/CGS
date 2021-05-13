@@ -139,48 +139,48 @@ public class NodeUtility : MonoBehaviour
         return closestNode;
     }
 }
-public class AgentUtility
-{
+//public class AgentUtility
+//{
 
-    public static Vector3[] FindPath(Vector3 a_startPosition, Vector3 a_endPosition)
-    {
-        if (NodeManager.m_nodeGraph == null)
-        {
-            Debug.Log("There is no node graph! Please create one from the node window" +
-                "Window/NodeGraph.");
-            return null;
-        }
+    //public static Vector3[] FindPath(Vector3 a_startPosition, Vector3 a_endPosition)
+    //{
+    //    if (NodeManager.m_nodeGraph == null)
+    //    {
+    //        Debug.Log("There is no node graph! Please create one from the node window" +
+    //            "Window/NodeGraph.");
+    //        return null;
+    //    }
 
-        Vector3[] path;
-        PathFindJob pathfind = new PathFindJob();
-        Vector3[] tempVectors = { a_startPosition, a_endPosition };
-        NativeArray<Vector3> startEndPos = new NativeArray<Vector3>(tempVectors, Allocator.Temp);
-        pathfind.startEndPos = startEndPos;
+    //    Vector3[] path;
+    //    PathFindJob pathfind = new PathFindJob();
+    //    Vector3[] tempVectors = { a_startPosition, a_endPosition };
+    //    NativeArray<Vector3> startEndPos = new NativeArray<Vector3>(tempVectors, Allocator.Temp);
+    //    pathfind.startEndPos = startEndPos;
 
-        //test for path finding time will need to improve the memory grabbing though its a bit slow and can be grouped
-        //float time = Time.realtimeSinceStartup;
-        pathfind.Execute();
-        //Debug.Log(Time.realtimeSinceStartup - time);
-        if (!pathfind.pathResult.IsCreated)
-        {
-            if (startEndPos.IsCreated)
-                startEndPos.Dispose();
-            Debug.Log("IT did it");
-            return null;
-        }
-        path = pathfind.pathResult.ToArray();
-        pathfind.pathResult.Dispose();
-        startEndPos.Dispose();
+    //    //test for path finding time will need to improve the memory grabbing though its a bit slow and can be grouped
+    //    //float time = Time.realtimeSinceStartup;
+    //    pathfind.Execute();
+    //    //Debug.Log(Time.realtimeSinceStartup - time);
+    //    if (!pathfind.pathResult.IsCreated)
+    //    {
+    //        if (startEndPos.IsCreated)
+    //            startEndPos.Dispose();
+    //        Debug.Log("Pathresult was null");
+    //        return null;
+    //    }
+    //    path = pathfind.pathResult.ToArray();
+    //    pathfind.pathResult.Dispose();
+    //    startEndPos.Dispose();
 
-        return path;
-    }
-    public static Vector3[] GetRandomPath(Vector3 a_objectPosition)
-    {
-        //yes this is horrible
-        return FindPath(a_objectPosition,
-            NodeManager.m_nodeGraph[UnityEngine.Random.Range(0, NodeManager.m_nodeGraph.Length)].m_position);
-    }
-}
+    //    return path;
+    //}
+    //public static Vector3[] GetRandomPath(Vector3 a_objectPosition)
+    //{
+    //    //yes this is horrible
+    //    return FindPath(a_objectPosition,
+    //        NodeManager.m_nodeGraph[UnityEngine.Random.Range(0, NodeManager.m_nodeGraph.Length)].m_position);
+    //}
+//}
 //this is a tree like container for pathfinding, its purpose is to have the nodes sorted by cost
 //rather than the original version of pathfinding where it cycled through the openset 
 //most of this is copied from a tutorial as there wasnt much i could change without breaking the implementation
@@ -299,7 +299,4 @@ public interface IHeapItem<T> : IComparable<T>
 {
     int ItemIndex { get; set; }
 }
-public static class PathScheduler
-{
 
-}

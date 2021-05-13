@@ -84,8 +84,10 @@ public class NodeManager : MonoBehaviour
             }
         }
         Overlap(ref nodes);
+
         Debug.Log("CREATION PASSED");
     }
+    
     public static void Overlap(ref List<NodeCheck> nodes)
     {
         List<NodeCheck> nodesToDelete = new List<NodeCheck>();
@@ -109,6 +111,7 @@ public class NodeManager : MonoBehaviour
         foreach (var deletionNode in nodesToDelete)
             nodes.Remove(deletionNode);
 
+        
         m_nodeGraph = new Node[nodes.Count];
         int index = 0;
         foreach (var VARIABLE in nodes)
