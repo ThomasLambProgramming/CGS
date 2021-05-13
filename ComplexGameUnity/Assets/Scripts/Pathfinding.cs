@@ -45,7 +45,7 @@ public struct PathFindJob : IJob
     public void Execute()
     {
         Heap<PathNode> openNodes = new Heap<PathNode>(NodeManager.m_nodeGraph.Length);
-        HashSet<PathNode> closedNodes = new HashSet<PathNode>();
+        HashSet<Node> closedNodes = new HashSet<Node>();
 
         //find the closest node from the start and finish, after the path is found there will be an additional
         //check that can be performed to see if the point can be reached after the path (eg the closest may be at the
@@ -65,7 +65,7 @@ public struct PathFindJob : IJob
             //to avoid a length and smallest before setting check gscore of current, by the end
             //the smallest will be the current
             PathNode currentNode = openNodes.RemoveFirst();
-            closedNodes.Add(currentNode);
+            closedNodes.Add(currentNode.node);
 
             if (currentNode.node == endNode1)
             {
@@ -89,23 +89,9 @@ public struct PathFindJob : IJob
                 return;
             }
 
-            foreach (var connection in currentNode.node.connections)
+            foreach (Edge connection in currentNode.node.connections)
             {
-                if (connection == null)
-                    continue;
-                //we need a travelable setting (nevermind this was a layermask for obsticles)
-
-                //this is a check to see if the node is in the closed or open list
-                bool isClosedNode = false;
-                foreach (PathNode closed in closedNodes)
-                {
-                    if (closed.node == NodeManager.m_nodeGraph[connection.to])
-                    {
-                        isClosedNode = true;
-                        break;
-                    }
-                }
-                if (isClosedNode)
+                if (connection == null || closedNodes.Contains(NodeManager.m_nodeGraph[connection.to]))
                     continue;
 
                 bool isOpen = false;
@@ -123,7 +109,7 @@ public struct PathFindJob : IJob
                 PathNode node = new PathNode(NodeManager.m_nodeGraph[connection.to], currentNode);
                 node.m_gCost = Vector3.Distance(node.node.m_position, currentNode.node.m_position) + currentNode.m_gCost;
 
-                float distanceToConnection = currentNode.m_gCost + Vector3.Distance(currentNode.node.m_position, NodeManager.m_nodeGraph[connection.to].m_position);
+                //float distanceToConnection = currentNode.m_gCost + Vector3.Distance(currentNode.node.m_position, NodeManager.m_nodeGraph[connection.to].m_position);
                 node.m_hCost = Vector3.Distance(node.node.m_position, endNode1.m_position);
                 openNodes.Add(node);
 
@@ -134,6 +120,7 @@ public struct PathFindJob : IJob
 }
 public class NodeUtility : MonoBehaviour
 {
+    //probably need to fix all this
     public static int FindClosestNode(Vector3 a_position)
     {
         if (NodeManager.m_nodeGraph == null)
@@ -152,5 +139,36 @@ public class NodeUtility : MonoBehaviour
             }
         }
         return closestNode;
+    }
+}
+
+public class AgentUtility
+{
+    public static Vector3[] FindPath(Vector3 a_startPosition, Vector3 a_endPosition)
+    {
+        if (NodeManager.m_nodeGraph == null)
+        {
+            Debug.Log("There is no node graph! Please create one from the node window" +
+                "Window/NodeGraph.");
+            return null;
+        }
+        Vector3[] path;
+        PathFindJob pathfind = new PathFindJob();
+        Vector3[] tempVectors = { a_startPosition, a_endPosition };
+        NativeArray<Vector3> startEndPos = new NativeArray<Vector3>(tempVectors, Allocator.TempJob);
+        pathfind.startEndPos = startEndPos;
+
+        //test for path finding time will need to improve the memory grabbing though its a bit slow and can be grouped
+        float time = Time.realtimeSinceStartup;
+        pathfind.Execute();
+        Debug.Log(Time.realtimeSinceStartup - time);
+
+        path = new Vector3[pathfind.pathResult.Length];
+        pathfind.pathResult.CopyTo(path);
+
+        pathfind.pathResult.Dispose();
+        startEndPos.Dispose();
+
+        return path;
     }
 }
