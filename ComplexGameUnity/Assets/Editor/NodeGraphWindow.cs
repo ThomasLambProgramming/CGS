@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 
 public class NodeGraphWindow : EditorWindow
@@ -47,11 +44,11 @@ public class NodeGraphWindow : EditorWindow
         
         if (GUILayout.Button("Bake Nodes"))
         {
-            float time = Time.realtimeSinceStartup;
+            //float time = Time.realtimeSinceStartup;
             NodeManager.ChangeValues(m_nodeDistance, m_nodeConnectionAmount, m_maxNodes,m_ySpaceLimit);
             NodeManager.CreateNodes(m_layerMask);
             NodeManager.LinkNodes(m_nodeDistance);
-            Debug.Log(Time.realtimeSinceStartup - time);
+            //Debug.Log(Time.realtimeSinceStartup - time);
         }
         if (GUILayout.Button("Show Links"))
         {

@@ -5,62 +5,48 @@ using Unity.Collections;
 
 public class Agent : MonoBehaviour
 {
+    public GameObject pathpos = null;
+    public float moveSpeed = 10f;
+    public float goNextDist = 2f;
+    private float actualGotoNext;
     Vector3[] path = null;
-    public static Vector3 start;
-    public static Vector3 end;
-
-    public GameObject startObj = null;
-    public GameObject endObj = null;
-
-    LineRenderer line = null;
-    public Camera mainCam = null;
-    // Start is called before the first frame update
-    void Start()
+    //since its an array we need the index
+    int currentIndex = 0;
+    
+    public void Start()
     {
-        line = GetComponent<LineRenderer>();
+        //this is so we dont do distance sqrt but the a^2 + b^2
+        actualGotoNext = goNextDist * goNextDist;
+
+        Application.SetStackTraceLogType(LogType.Error, StackTraceLogType.Full);
     }
-
-    // Update is called once per frame
-    private void Update()
+    public void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (NodeManager.m_nodeGraph == null)
+            return;
+
+        if (path == null && NodeManager.m_nodeGraph != null)
         {
-            RaycastHit hit;
-            if (Physics.Raycast(mainCam.ScreenPointToRay(Input.mousePosition), out hit, 9000.0f, ~0))
-            {
-                start = hit.point;
-                Node closestNode1 = NodeManager.m_nodeGraph[NodeUtility.FindClosestNode(hit.point)];
-                startObj.transform.position = closestNode1.m_position;
-            }
+            GetNewPath();
         }
+        else if (Vector3.Distance(path[currentIndex], transform.position) < goNextDist)
         {
-            RaycastHit hit;
-            if (Physics.Raycast(mainCam.ScreenPointToRay(Input.mousePosition), out hit, 9000.0f, ~0))
+            if (currentIndex < path.Length - 1)
             {
-                end = hit.point;
-
-                if (start != null && end != null)
-                {
-
-                    path = AgentUtility.FindPath(start, end);
-
-
-                    //path = NodeUtility.Pathfind(start, end);
-                    line.positionCount = path.Length;
-                    for (int i = 0; i < path.Length; i++)
-                    {
-                        line.SetPosition(i, path[i]);
-                    }
-                    endObj.transform.position = path[0];
-
-                }
+                currentIndex++;
+                //for now snapping is ok
+                transform.LookAt(path[currentIndex]);
             }
+            else
+                path = null;
         }
+        transform.position += transform.forward * moveSpeed * Time.deltaTime;
 
+    }
+    private void GetNewPath()
+    {
+        path = AgentUtility.GetRandomPath(transform.position);
+        currentIndex = 0;
+        transform.LookAt(path[currentIndex]);
     }
 }
-//make an abstract class for agents to be able to use
-//public class PathFind : MonoBehaviour
-//{
-//    void 
-//}
