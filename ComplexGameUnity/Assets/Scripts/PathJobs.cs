@@ -7,7 +7,7 @@ using Unity.Jobs;
 
 public struct PathFindJob : IJob
 {
-    class PathNode
+    class PathNode : IHeapItem<PathNode>
     {
         public float m_totalCost = 0;
         public float m_gCost = 0;
@@ -15,11 +15,27 @@ public struct PathFindJob : IJob
         public float m_fCost { get { return m_gCost + m_hCost; } }
         public Node node = null;
         public PathNode m_parent = null;
-
+        int itemIndex;
         public PathNode(Node a_node1, PathNode a_parent)
         {
             node = a_node1;
             m_parent = a_parent;
+        }
+        public int ItemIndex
+        {
+            get { return itemIndex; }
+            set { itemIndex = value; }
+        }
+        public int CompareTo(PathNode other)
+        {
+            //get the compare to the f costs
+            int compare = m_fCost.CompareTo(other.m_fCost);
+            //if they are the same then we go off hcost (closer to endnode)
+            if (compare == 0)
+                compare = m_hCost.CompareTo(other.m_hCost);
+            //as we want the priority(smaller fcost) rather than which one is bigger
+            //we give the - to reverse
+            return -compare;
         }
     }
     //index of the agents start and end nodes
@@ -28,15 +44,15 @@ public struct PathFindJob : IJob
     public NativeArray<Vector3> pathResult;
     public void Execute()
     {
-        List<PathNode> openNodes = new List<PathNode>();
-        List<PathNode> closedNodes = new List<PathNode>();
+        Heap<PathNode> openNodes = new Heap<PathNode>(NodeManager.m_nodeGraph.Length);
+        HashSet<PathNode> closedNodes = new HashSet<PathNode>();
 
         //find the closest node from the start and finish, after the path is found there will be an additional
         //check that can be performed to see if the point can be reached after the path (eg the closest may be at the
         //start of a mountain but there are no nodes and the end point is the peak)
         Node startNode1 = NodeManager.m_nodeGraph[NodeUtility.FindClosestNode(startEndPos[0])];
         Node endNode1 = NodeManager.m_nodeGraph[NodeUtility.FindClosestNode(startEndPos[1])];
-
+        
         //giving it null as it is the starting node
         PathNode start = new PathNode(startNode1, null);
         start.m_gCost = 0;
@@ -48,13 +64,7 @@ public struct PathFindJob : IJob
         {
             //to avoid a length and smallest before setting check gscore of current, by the end
             //the smallest will be the current
-            PathNode currentNode = openNodes[0];
-            for (int i = 0; i < openNodes.Count; i++)
-                if (openNodes[i].m_fCost < currentNode.m_fCost || (openNodes[i].m_fCost == currentNode.m_fCost && openNodes[i].m_hCost < currentNode.m_hCost))
-                    currentNode = openNodes[i];
-
-
-            openNodes.Remove(currentNode);
+            PathNode currentNode = openNodes.RemoveFirst();
             closedNodes.Add(currentNode);
 
             if (currentNode.node == endNode1)
@@ -99,9 +109,9 @@ public struct PathFindJob : IJob
                     continue;
 
                 bool isOpen = false;
-                foreach (PathNode open in openNodes)
+                for (int i = 0; i < openNodes.Count; i++)
                 {
-                    if (open.node == NodeManager.m_nodeGraph[connection.to])
+                    if (openNodes.items[i].node == NodeManager.m_nodeGraph[connection.to])
                     {
                         isOpen = true;
                         break;

@@ -26,7 +26,7 @@ public class NodeGraphWindow : EditorWindow
     [MenuItem("Window/NodeGraph")] 
     public static void ShowWindow()
     {
-        EditorWindow.GetWindow(typeof(NodeGraphWindow));
+        GetWindow(typeof(NodeGraphWindow));
     }
     void OnGUI()
     {

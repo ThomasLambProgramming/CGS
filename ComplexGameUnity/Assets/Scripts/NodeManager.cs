@@ -209,7 +209,7 @@ public class NodeManager : MonoBehaviour
 //it was hand copied not ctrl c and i added comments to show that i do know what its doing
 public class Heap<T> where T : IHeapItem<T>
 {
-    T[] items;
+    public T[] items;
     //keeps current "used" amount in the array
     int currentCount;
     public Heap(int a_maxSize)
