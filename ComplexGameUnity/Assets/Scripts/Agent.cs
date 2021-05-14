@@ -16,8 +16,6 @@ public class Agent : MonoBehaviour
     {
         //this is so we dont do distance sqrt but the a^2 + b^2
         actualGotoNext = goNextDist * goNextDist;
-
-        Application.SetStackTraceLogType(LogType.Error, StackTraceLogType.Full);
     }
     public void Update()
     {
@@ -28,7 +26,7 @@ public class Agent : MonoBehaviour
         {
             GetNewPath();
         }
-        else if (Vector3.Distance(path[currentIndex], transform.position) < goNextDist)
+        else if (Vector3.Magnitude(path[currentIndex] - transform.position) < actualGotoNext)
         {
             if (currentIndex < path.Length - 1)
             {

@@ -32,6 +32,7 @@ public class NodeManager : MonoBehaviour
 {
     public static NodeContainer nodeScriptableObject = null;
 
+    //Len is awesome below [] method thingy he showed its amazing
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
     public static void OnStart()
     {
@@ -43,6 +44,7 @@ public class NodeManager : MonoBehaviour
             if (nodeScriptableObject.NodeGraph != null)
                 m_nodeGraph = nodeScriptableObject.NodeGraph;
     }
+
     //Static variables for use by the whole system
     public static float m_nodeDistance = 5;
     public static int m_nodeConnectionAmount = 50000;
@@ -135,16 +137,22 @@ public class NodeManager : MonoBehaviour
         //links all nodes together
         LinkNodes(m_nodeDistance);
 
-        if (m_nodeGraph != null)
+        List<Node> FinalArrayNode = new List<Node>();
+        foreach (var nod in m_nodeGraph)
         {
-            StreamWriter stream = new StreamWriter(Application.dataPath + "/Editor/NodeData.json");
-            string json = "";
-            for (int i = 0; i < m_nodeGraph.Length; i++)
+            for (int i = 0; i < nod.connections.Length; i++)
             {
-                json += JsonUtility.ToJson(m_nodeGraph[i], true);
+                if (nod.connections[i] != null)
+                {
+                    FinalArrayNode.Add(nod);
+                    break;
+                }
             }
-            stream.Write(json);
-            stream.Close();
+        }
+        m_nodeGraph = new Node[FinalArrayNode.Count];
+        for(int i = 0; i < FinalArrayNode.Count; i++)
+        {
+            m_nodeGraph[i] = FinalArrayNode[i];
         }
     }
 

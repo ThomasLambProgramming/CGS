@@ -6,7 +6,7 @@ public class AgentContainer : MonoBehaviour
 {
     public int amountToSpawn = 100;
     public GameObject Agent;
-    public NodeContainer nodecon = null;
+    public int amountSpawned = 0;
     // Update is called once per frame
     void Update()
     {
@@ -15,6 +15,8 @@ public class AgentContainer : MonoBehaviour
         {
             for (int i = 0; i < amountToSpawn; i++)
                 Instantiate(Agent, new Vector3(0, 0, 0), Quaternion.identity, transform);
+
+            amountSpawned += amountToSpawn;
         }
     }
 }
