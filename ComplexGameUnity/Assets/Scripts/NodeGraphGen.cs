@@ -204,6 +204,24 @@ public class NodeManager : MonoBehaviour
                 float distBetweenNodes = Vector3.Magnitude(m_nodeGraph[a].m_position - m_nodeGraph[b].m_position);
                 if (distBetweenNodes < a_nodeDistance * a_nodeDistance)
                 {
+                    //checks between non walkable for connection
+
+                    bool isPassingThrough = false;
+                    foreach (var position in m_unwalkablePoints)
+                    {
+                        Vector3 direction = Vector3.Normalize(m_nodeGraph[b].m_position - m_nodeGraph[a].m_position);
+                        float distanceToUnwalk = Vector3.Distance(m_nodeGraph[a].m_position, position);
+                        Vector3 positionOfCheck = m_nodeGraph[a].m_position + direction * distanceToUnwalk;
+                        if (Vector3.Distance(positionOfCheck, position) < 1f)
+                        {
+                            isPassingThrough = true;
+                            break;
+                        }
+                    }
+                    //if its going through a unwalkable dont make the connection
+                    if (isPassingThrough)
+                        continue;
+                    //----------------------------------------
                     int indexA = -1;
                     int indexB = -1;
                     float aMaxDist = -1;
