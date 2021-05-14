@@ -44,7 +44,7 @@ public class Agent : MonoBehaviour
     }
     private void GetNewPath()
     {
-        path = GetRandomPath(transform.position);
+        path = FindPath(transform.position, new Vector3(Random.Range(-50.0f, 50.0f), 0, Random.Range(-50.0f, 50.0f)));
         currentIndex = 0;
         transform.LookAt(path[currentIndex]);
     }
@@ -79,11 +79,6 @@ public class Agent : MonoBehaviour
         startEndPos.Dispose();
 
         return path;
-    }
-    private Vector3[] GetRandomPath(Vector3 a_objectPosition)
-    {
-        //yes this is horrible
-        return FindPath(a_objectPosition,new Vector3(Random.Range(-50.0f,50.0f),0,Random.Range(-50.0f,50.0f)));
     }
 }
 

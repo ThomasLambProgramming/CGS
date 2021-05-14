@@ -17,6 +17,7 @@ public struct PathFindJob : IJob
         public PathNode(Node a_node1, PathNode a_parent)
         {
             node = a_node1;
+            Debug.Log(node.m_position);
             m_parent = a_parent;
         }
         public int ItemIndex
@@ -53,6 +54,7 @@ public struct PathFindJob : IJob
         
         //giving it null as it is the starting node
         PathNode start = new PathNode(startNode1, null);
+        
         start.m_gCost = 0;
         start.m_hCost = Vector3.Distance(start.node.m_position, endNode1.m_position);
         openNodes.Add(start);
@@ -129,7 +131,7 @@ public class NodeUtility : MonoBehaviour
 
         for (int i = 0; i < NodeManager.m_nodeGraph.Length; i++)
         {
-            float nodeDist = Vector3.Distance(NodeManager.m_nodeGraph[i].m_position, a_position);
+            float nodeDist = Vector3.Magnitude(NodeManager.m_nodeGraph[i].m_position - a_position);
             if (nodeDist < distance)
             {
                 distance = nodeDist;
