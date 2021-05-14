@@ -17,7 +17,7 @@ public struct PathFindJob : IJob
         public PathNode(Node a_node1, PathNode a_parent)
         {
             node = a_node1;
-            Debug.Log(node.m_position);
+            
             m_parent = a_parent;
         }
         public int ItemIndex

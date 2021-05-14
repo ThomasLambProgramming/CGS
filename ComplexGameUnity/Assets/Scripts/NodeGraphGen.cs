@@ -5,18 +5,18 @@ using UnityEngine;
 using UnityEngine.Analytics;
 using System.Runtime.InteropServices;
 using System;
-[SerializeField]
+using System.IO;
+[Serializable]
 public class Node
 {
-    public Vector3 m_position = new Vector3(0,0,0);
+    public Vector3 m_position = new Vector3(0, 0, 0);
     public Edge[] connections = new Edge[NodeManager.m_nodeConnectionAmount];
     public Node(Vector3 a_position)
     {
         m_position = a_position;
-
     }
 }
-[SerializeField]
+[Serializable]
 public class Edge
 {
     //index of the nodegraph array
@@ -30,6 +30,19 @@ public class Edge
 }
 public class NodeManager : MonoBehaviour
 {
+    public static NodeContainer nodeScriptableObject = null;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+    public static void OnStart()
+    {
+        NodeContainer[] temparray = Resources.FindObjectsOfTypeAll<NodeContainer>();
+        if (temparray != null)
+            nodeScriptableObject = temparray[0];
+
+        if (nodeScriptableObject != null)
+            if (nodeScriptableObject.NodeGraph != null)
+                m_nodeGraph = nodeScriptableObject.NodeGraph;
+    }
     //Static variables for use by the whole system
     public static float m_nodeDistance = 5;
     public static int m_nodeConnectionAmount = 50000;
@@ -38,7 +51,7 @@ public class NodeManager : MonoBehaviour
 
     static List<Vector3> m_unwalkablePoints = new List<Vector3>();
     public static Node[] m_nodeGraph = null;
-        
+
     public static void ChangeValues(float a_nodeDistance, int a_connectionAmount, int a_maxNodes, float a_yLimit)
     {
         m_nodeDistance = a_nodeDistance;
@@ -51,7 +64,7 @@ public class NodeManager : MonoBehaviour
     {
         GameObject[] foundObjects = FindObjectsOfType<GameObject>();
         List<NodeCheck> nodes = new List<NodeCheck>();
-        
+
         foreach (GameObject currentObject in foundObjects)
         {
             if (currentObject.CompareTag("Node"))
@@ -110,6 +123,9 @@ public class NodeManager : MonoBehaviour
                         objectVerts.Add(node.position);
                     }
                 }
+
+
+
             }
         }
         //removes overlaps and unneeded
@@ -118,6 +134,18 @@ public class NodeManager : MonoBehaviour
         UnWalkable(ref nodes);
         //links all nodes together
         LinkNodes(m_nodeDistance);
+
+        if (m_nodeGraph != null)
+        {
+            StreamWriter stream = new StreamWriter(Application.dataPath + "/Editor/NodeData.json");
+            string json = "";
+            for (int i = 0; i < m_nodeGraph.Length; i++)
+            {
+                json += JsonUtility.ToJson(m_nodeGraph[i], true);
+            }
+            stream.Write(json);
+            stream.Close();
+        }
     }
 
     private static void UnWalkable(ref List<NodeCheck> nodes)
@@ -129,8 +157,8 @@ public class NodeManager : MonoBehaviour
             {
                 Vector2 nodepoint = new Vector2(nodeAlpha.position.x, nodeAlpha.position.z);
                 Vector2 unwalk = new Vector2(unwalkPoint.x, unwalkPoint.z);
-                
-                if (Vector2.Distance(nodepoint,unwalk) < 1f)
+
+                if (Vector2.Distance(nodepoint, unwalk) < 1f)
                     if (Mathf.Abs(nodeAlpha.position.y - unwalkPoint.y) < m_ySpaceLimit)
                         nodesToDelete.Add(nodeAlpha);
             }
@@ -174,7 +202,7 @@ public class NodeManager : MonoBehaviour
     {
         if (m_nodeGraph == null)
             return;
-   
+
         for (int a = 0; a < m_nodeGraph.Length; a++)
         {
             for (int b = 0; b < m_nodeGraph.Length; b++)
@@ -226,7 +254,7 @@ public class NodeManager : MonoBehaviour
                     int indexB = -1;
                     float aMaxDist = -1;
                     float bMaxDist = -1;
-                    
+
                     for (int i = 0; i < m_nodeConnectionAmount; i++)
                     {
 
@@ -283,11 +311,11 @@ public class NodeManager : MonoBehaviour
 
         foreach (var node in m_nodeGraph)
         {
-            for(int i = 0; i < node.connections.Length - 1; i++)
+            for (int i = 0; i < node.connections.Length - 1; i++)
             {
                 //if the connection isnt null then draw a line of it this whole function is self explaining
                 if (node.connections[i] != null)
-                    Debug.DrawLine(node.m_position,m_nodeGraph[node.connections[i].to].m_position);
+                    Debug.DrawLine(node.m_position, m_nodeGraph[node.connections[i].to].m_position);
             }
         }
     }
@@ -308,6 +336,6 @@ public class NodeManager : MonoBehaviour
 
         //if it does go through the bounding box 
         Vector3[] checkPoints;
-        
+
     }
 }

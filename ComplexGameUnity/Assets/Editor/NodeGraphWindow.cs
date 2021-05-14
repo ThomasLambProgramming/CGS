@@ -8,28 +8,26 @@ public class NodeGraphWindow : EditorWindow
     int m_maxNodes = 1000;
     float m_ySpaceLimit = 1;
     bool loaded = false;
-    
+    NodeContainer nodedata = null;
 
     //default mask is layer one only 
     private int m_layerMask = 0 << 1;
    //private string m_tagMask = "";
-    private string[] m_maskOptions = new string[] 
-    {   "1","2","3","4","5", "6","7","8","9",
-        "10","11","12","13","14","15","16","17","18",
-        "19","20","21","22","23","24","25","26","27","28",
-        "29","30","31","32"
-    };
+    
     
     [MenuItem("Window/NodeGraph")] 
     public static void ShowWindow()
     {
         GetWindow(typeof(NodeGraphWindow));
     }
+
     void OnGUI()
     {
         if (loaded == false)
         {
             LoadFile();
+            if (nodedata.NodeGraph != null && NodeManager.m_nodeGraph == null)
+                NodeManager.m_nodeGraph = nodedata.NodeGraph;
             loaded = true;
         }
         
@@ -40,13 +38,15 @@ public class NodeGraphWindow : EditorWindow
         m_nodeConnectionAmount = EditorGUILayout.IntField("Max connections", m_nodeConnectionAmount);
         m_maxNodes = EditorGUILayout.IntField("Max nodes",m_maxNodes);
         m_ySpaceLimit = EditorGUILayout.FloatField("Minimum Y Distance", m_ySpaceLimit);
-        m_layerMask = EditorGUILayout.MaskField("Mask layers", m_layerMask, m_maskOptions);
         
+        nodedata = (NodeContainer)EditorGUILayout.ObjectField("NodeData", nodedata, typeof(NodeContainer), false);
         if (GUILayout.Button("Bake Nodes"))
         {
             //float time = Time.realtimeSinceStartup;
             NodeManager.ChangeValues(m_nodeDistance, m_nodeConnectionAmount, m_maxNodes,m_ySpaceLimit);
             NodeManager.CreateNodes(m_layerMask);
+            nodedata.NodeGraph = NodeManager.m_nodeGraph;
+            NodeManager.nodeScriptableObject = nodedata;
             //Debug.Log(Time.realtimeSinceStartup - time);
         }
         if (GUILayout.Button("Show Links"))

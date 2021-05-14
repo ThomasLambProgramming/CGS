@@ -30,9 +30,11 @@ public class SaveSystem
 
         //this gets the json string and then adds it to the file specified
         StreamWriter stream = new StreamWriter(a_filePath);
-        string json = JsonUtility.ToJson(toSave);
+        string json = JsonUtility.ToJson(toSave, true);
         stream.Write(json);
         stream.Close();
+
+        
     }
     public static EditorValues LoadData(string a_filePath)
     {

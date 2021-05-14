@@ -21,6 +21,10 @@ public class tempAgent : MonoBehaviour
     {
         line = GetComponent<LineRenderer>();
         mainCam = Camera.main;
+        if (NodeManager.nodeScriptableObject != null && NodeManager.m_nodeGraph == null)
+        {
+            NodeManager.m_nodeGraph = NodeManager.nodeScriptableObject.NodeGraph;
+        }
     }
 
     // Update is called once per frame

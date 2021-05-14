@@ -1,1 +1,7 @@
-{"m_distance":50.0,"m_nodeConnectionAmount":8,"m_maxNodes":10000,"m_ySpaceLimit":5.0,"m_layerMask":0}
+{
+    "m_distance": 51.0,
+    "m_nodeConnectionAmount": 8,
+    "m_maxNodes": 10000,
+    "m_ySpaceLimit": 5.0,
+    "m_layerMask": 0
+}

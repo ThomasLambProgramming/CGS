@@ -6,9 +6,11 @@ public class AgentContainer : MonoBehaviour
 {
     public int amountToSpawn = 100;
     public GameObject Agent;
+    public NodeContainer nodecon = null;
     // Update is called once per frame
     void Update()
     {
+
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             for (int i = 0; i < amountToSpawn; i++)
