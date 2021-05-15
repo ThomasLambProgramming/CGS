@@ -48,17 +48,17 @@ public class NodeManager : MonoBehaviour
     //Static variables for use by the whole system
     public static float m_nodeDistance = 5;
     public static int m_nodeConnectionAmount = 50000;
-    public static int m_maxNodes = 1000;
+
     public static float m_ySpaceLimit = 1;
 
     static List<Vector3> m_unwalkablePoints = new List<Vector3>();
     public static Node[] m_nodeGraph = null;
 
-    public static void ChangeValues(float a_nodeDistance, int a_connectionAmount, int a_maxNodes, float a_yLimit)
+    public static void ChangeValues(float a_nodeDistance, int a_connectionAmount, float a_yLimit)
     {
         m_nodeDistance = a_nodeDistance;
         m_nodeConnectionAmount = a_connectionAmount;
-        m_maxNodes = a_maxNodes;
+    
         m_ySpaceLimit = a_yLimit;
     }
 
@@ -153,6 +153,19 @@ public class NodeManager : MonoBehaviour
         for(int i = 0; i < FinalArrayNode.Count; i++)
         {
             m_nodeGraph[i] = FinalArrayNode[i];
+        }
+        
+        NodeContainer[] temparray = Resources.FindObjectsOfTypeAll<NodeContainer>();
+        if (temparray != null)
+            nodeScriptableObject = temparray[0];
+        else
+            return;
+
+
+        if (nodeScriptableObject.NodeGraph != null)
+        {
+            nodeScriptableObject.NodeGraph = m_nodeGraph;
+            EditorUtility.SetDirty(nodeScriptableObject);
         }
     }
 
