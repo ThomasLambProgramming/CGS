@@ -103,6 +103,7 @@ public struct PathFindJob : IJob
                         break;
                     }
                 }
+                //UPDATE THIS TO RECALULATE THE CONNECTION COST IT COULD BE LOWER REEEE
                 if (isOpen)
                     continue;
 

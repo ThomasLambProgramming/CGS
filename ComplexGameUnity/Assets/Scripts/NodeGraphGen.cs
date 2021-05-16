@@ -51,6 +51,7 @@ public class NodeManager : MonoBehaviour
 
     public static float m_ySpaceLimit = 1;
 
+    public static List<GameObject> ObjectsToProcess = new List<GameObject>();
     static List<Vector3> m_unwalkablePoints = new List<Vector3>();
     public static Node[] m_nodeGraph = null;
 
