@@ -131,6 +131,7 @@ public class NodeManager : MonoBehaviour
 
             }
         }
+        
         //removes overlaps and unneeded
         Overlap(ref nodes);
         //removes nodes that are too close to unwalkable objects
@@ -167,6 +168,7 @@ public class NodeManager : MonoBehaviour
         {
             nodeScriptableObject.NodeGraph = m_nodeGraph;
             EditorUtility.SetDirty(nodeScriptableObject);
+            AssetDatabase.SaveAssets();
         }
     }
 
