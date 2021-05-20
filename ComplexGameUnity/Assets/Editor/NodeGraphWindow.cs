@@ -42,6 +42,7 @@ public class NodeGraphWindow : EditorWindow
         if (GUILayout.Button("Show Links"))
         {
             NodeManager.DrawNodes();
+            
         }
     }
     private void LoadFile()

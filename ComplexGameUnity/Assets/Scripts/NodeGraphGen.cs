@@ -40,7 +40,7 @@ public class NodeManager : MonoBehaviour
         if (temparray != null)
             nodeScriptableObject = temparray[0];
 
-        if (nodeScriptableObject != null)
+        if (nodeScriptableObject != null && m_nodeGraph == null)
             if (nodeScriptableObject.NodeGraph != null)
                 m_nodeGraph = nodeScriptableObject.NodeGraph;
     }
@@ -48,10 +48,8 @@ public class NodeManager : MonoBehaviour
     //Static variables for use by the whole system
     public static float m_nodeDistance = 5;
     public static int m_nodeConnectionAmount = 50000;
-
     public static float m_ySpaceLimit = 1;
 
-    public static List<GameObject> ObjectsToProcess = new List<GameObject>();
     static List<Vector3> m_unwalkablePoints = new List<Vector3>();
     public static Node[] m_nodeGraph = null;
 
@@ -59,7 +57,6 @@ public class NodeManager : MonoBehaviour
     {
         m_nodeDistance = a_nodeDistance;
         m_nodeConnectionAmount = a_connectionAmount;
-    
         m_ySpaceLimit = a_yLimit;
     }
 
@@ -85,6 +82,7 @@ public class NodeManager : MonoBehaviour
                 foreach (var vert in objectMesh.sharedMesh.vertices)
                 {
                     Vector3 vertWorldPos = currentObject.transform.TransformPoint(vert);
+
                     foreach (var VARIABLE in objectVerts)
                     {
                         if (Vector3.Distance(VARIABLE, vertWorldPos) < 0.3f)
@@ -131,45 +129,56 @@ public class NodeManager : MonoBehaviour
 
             }
         }
-        
+
         //removes overlaps and unneeded
         Overlap(ref nodes);
         //removes nodes that are too close to unwalkable objects
         UnWalkable(ref nodes);
         //links all nodes together
-        LinkNodes(m_nodeDistance);
-
-        List<Node> FinalArrayNode = new List<Node>();
-        foreach (var nod in m_nodeGraph)
+        LinkNodes();
+        foreach(var node in m_nodeGraph)
         {
-            for (int i = 0; i < nod.connections.Length; i++)
+            for (int i = 0; i < m_nodeConnectionAmount; i++)
             {
-                if (nod.connections[i] != null)
+                if (node.connections[i] == null)
                 {
-                    FinalArrayNode.Add(nod);
-                    break;
+                    //because of scriptable objects the nodes that dont connect are
+                    //all pointing to 0 so i have to give defaults or it will do mass overlaps
+                    node.connections[i] = new Edge(-1);
                 }
             }
         }
-        m_nodeGraph = new Node[FinalArrayNode.Count];
-        for(int i = 0; i < FinalArrayNode.Count; i++)
-        {
-            m_nodeGraph[i] = FinalArrayNode[i];
-        }
-        
         NodeContainer[] temparray = Resources.FindObjectsOfTypeAll<NodeContainer>();
-        if (temparray != null)
-            nodeScriptableObject = temparray[0];
+        if (temparray.Length != 0)
+        {
+            if (temparray[0] != null)
+                nodeScriptableObject = temparray[0];
+        }
         else
             return;
 
-
-        if (nodeScriptableObject.NodeGraph != null)
+        nodeScriptableObject.NodeGraph = new Node[m_nodeGraph.Length];
+        for(int i = 0; i < m_nodeGraph.Length; i++)
         {
-            nodeScriptableObject.NodeGraph = m_nodeGraph;
-            EditorUtility.SetDirty(nodeScriptableObject);
-            AssetDatabase.SaveAssets();
+            nodeScriptableObject.NodeGraph[i] = m_nodeGraph[i];
         }
+        EditorUtility.SetDirty(nodeScriptableObject);
+        AssetDatabase.SaveAssets();
+
+        foreach(var node1 in m_nodeGraph)
+        {
+            foreach(var node2 in m_nodeGraph)
+            {
+                if (node1 == node2)
+                    continue;
+                if (Vector3.Distance(node1.m_position,node2.m_position) < 0.4f)
+                {
+                    Debug.Log("Still overlaps");
+                }
+            }
+        }
+
+
     }
 
     private static void UnWalkable(ref List<NodeCheck> nodes)
@@ -208,6 +217,19 @@ public class NodeManager : MonoBehaviour
             {
                 if (nodeAlpha == nodeBeta)
                     continue;
+                if (Vector3.Distance(nodeAlpha.position, nodeBeta.position) < 0.3f)
+                {
+                    if (nodeAlpha.position.y > nodeBeta.position.y)
+                    {
+                        if (nodesToDelete.Contains(nodeAlpha) == false)
+                            nodesToDelete.Add(nodeBeta);
+                    }
+                    else
+                    {
+                        if (nodesToDelete.Contains(nodeBeta) == false)
+                            nodesToDelete.Add(nodeAlpha);
+                    }
+                }
                 Vector3 alphaToBetaDir = Vector3.Normalize(nodeBeta.position - nodeAlpha.position);
                 if (Vector3.Dot(-nodeAlpha.normal, alphaToBetaDir) > 0.9f &&
                     Mathf.Abs(nodeAlpha.position.y - nodeBeta.position.y) <= m_ySpaceLimit)
@@ -222,7 +244,7 @@ public class NodeManager : MonoBehaviour
         foreach (var deletionNode in nodesToDelete)
             nodes.Remove(deletionNode);
     }
-    private static void LinkNodes(float a_nodeDistance)
+    private static void LinkNodes()
     {
         if (m_nodeGraph == null)
             return;
@@ -253,14 +275,15 @@ public class NodeManager : MonoBehaviour
                     continue;
 
 
-                float distBetweenNodes = Vector3.Magnitude(m_nodeGraph[a].m_position - m_nodeGraph[b].m_position);
-                if (distBetweenNodes < a_nodeDistance * a_nodeDistance)
+                float distBetweenNodes = Vector3.Distance(m_nodeGraph[a].m_position, m_nodeGraph[b].m_position);
+                if (distBetweenNodes < m_nodeDistance)
                 {
                     //checks between non walkable for connection
 
                     bool isPassingThrough = false;
                     foreach (var position in m_unwalkablePoints)
                     {
+                        Debug.Log("TEST TO SEE IF UNWALK CHECK RUNS ON EMPTY");
                         Vector3 direction = Vector3.Normalize(m_nodeGraph[b].m_position - m_nodeGraph[a].m_position);
                         float distanceToUnwalk = Vector3.Distance(m_nodeGraph[a].m_position, position);
                         Vector3 positionOfCheck = m_nodeGraph[a].m_position + direction * distanceToUnwalk;
@@ -274,21 +297,30 @@ public class NodeManager : MonoBehaviour
                     if (isPassingThrough)
                         continue;
                     //----------------------------------------
+
+                    //ADD FOR OVERLAP OF ADDED NODES (optional not needed for main use)
+
+
+
+
+                    //----------------------------------------
+
                     int indexA = -1;
                     int indexB = -1;
                     float aMaxDist = -1;
                     float bMaxDist = -1;
-
+                    bool nullFound = false;
                     for (int i = 0; i < m_nodeConnectionAmount; i++)
                     {
-
+                        
                         if (m_nodeGraph[a].connections[i] == null)
                         {
+                            
                             indexA = i;
-                            aMaxDist = -1;
+                            nullFound = true;
                             break;
                         }
-                        float currentDist = Vector3.Magnitude(m_nodeGraph[a].m_position - m_nodeGraph[m_nodeGraph[a].connections[i].to].m_position);
+                        float currentDist = Vector3.Distance(m_nodeGraph[a].m_position, m_nodeGraph[m_nodeGraph[a].connections[i].to].m_position);
                         if (currentDist > aMaxDist)
                         {
                             //this tells us which is the furthest node away
@@ -296,34 +328,37 @@ public class NodeManager : MonoBehaviour
                             indexA = i;
                         }
                     }
+                       
                     //we know the distance is too great
-                    if (distBetweenNodes > aMaxDist && aMaxDist != -1)
-                        continue;
-
-                    //if it gets to this point we know its in range of a, we then have to check b with the same process
-
-                    for (int i = 0; i < m_nodeConnectionAmount; i++)
+                    if (distBetweenNodes < aMaxDist || nullFound)
                     {
-                        if (m_nodeGraph[b].connections[i] == null)
+                        //if it gets to this point we know its in range of a, we then have to check b with the same process
+                        nullFound = false;
+                        for (int i = 0; i < m_nodeConnectionAmount; i++)
                         {
-                            indexB = i;
-                            bMaxDist = -1;
-                            break;
+                            if (m_nodeGraph[b].connections[i] == null)
+                            {
+                                indexB = i;
+                                nullFound = true;
+                                break;
+                            }
+
+                            float currentDist = Vector3.Distance(m_nodeGraph[b].m_position, m_nodeGraph[m_nodeGraph[b].connections[i].to].m_position);
+                            if (currentDist > bMaxDist)
+                            {
+                                //this tells us which is the furthest node away
+                                bMaxDist = currentDist;
+                                indexB = i;
+                            }
                         }
-                        float currentDist = Vector3.Magnitude(m_nodeGraph[b].m_position - m_nodeGraph[m_nodeGraph[b].connections[i].to].m_position);
-                        if (currentDist > bMaxDist)
+
+                        if (distBetweenNodes < bMaxDist || nullFound)
                         {
-                            //this tells us which is the furthest node away
-                            bMaxDist = currentDist;
-                            indexB = i;
+                            //if all that passes then we can add to both
+                            m_nodeGraph[a].connections[indexA] = new Edge(b);
+                            m_nodeGraph[b].connections[indexB] = new Edge(a);
                         }
                     }
-                    if (distBetweenNodes > bMaxDist && bMaxDist != -1)
-                        continue;
-
-                    //if all that passes then we can add to both
-                    m_nodeGraph[a].connections[indexA] = new Edge(b);
-                    m_nodeGraph[b].connections[indexB] = new Edge(a);
                 }
             }
         }
@@ -339,7 +374,8 @@ public class NodeManager : MonoBehaviour
             {
                 //if the connection isnt null then draw a line of it this whole function is self explaining
                 if (node.connections[i] != null)
-                    Debug.DrawLine(node.m_position, m_nodeGraph[node.connections[i].to].m_position);
+                    if(node.connections[i].to != -1)
+                        Debug.DrawLine(node.m_position, m_nodeGraph[node.connections[i].to].m_position);
             }
         }
     }
@@ -350,16 +386,5 @@ public class NodeManager : MonoBehaviour
     {
         public Vector3 position;
         public Vector3 normal;
-    }
-    private class UnWalkableObject
-    {
-        //overall check so processing isnt wasted
-        Vector3 m_boundingExtents;
-        //use the centerpoint to see if a connection goes through the bounding box
-        Vector3 m_centerPoint;
-
-        //if it does go through the bounding box 
-        Vector3[] checkPoints;
-
     }
 }

@@ -91,7 +91,7 @@ public struct PathFindJob : IJob
 
             foreach (Edge connection in currentNode.node.connections)
             {
-                if (connection == null || closedNodes.Contains(NodeManager.m_nodeGraph[connection.to]))
+                if (connection == null || connection.to == -1 || closedNodes.Contains(NodeManager.m_nodeGraph[connection.to]))
                     continue;
 
                 bool isOpen = false;
