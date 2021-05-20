@@ -37,8 +37,9 @@ public class NodeManager : MonoBehaviour
     public static void OnStart()
     {
         NodeContainer[] temparray = Resources.FindObjectsOfTypeAll<NodeContainer>();
-        if (temparray != null)
-            nodeScriptableObject = temparray[0];
+        if (temparray != null && temparray.Length > 0)
+            if (temparray[0] != null)
+                nodeScriptableObject = temparray[0];
 
         if (nodeScriptableObject != null && m_nodeGraph == null)
             if (nodeScriptableObject.NodeGraph != null)

@@ -6,6 +6,7 @@ using Unity.Collections;
 public class Agent : MonoBehaviour
 {
     public float moveSpeed = 10f;
+    public float turnSpeed = 2f;
     public float goNextDist = 2f;
     private float actualGotoNext;
     Vector3[] path = null;
@@ -19,32 +20,42 @@ public class Agent : MonoBehaviour
     }
     public void Update()
     {
-        if (NodeManager.m_nodeGraph == null)
-            return;
+        if (path != null)
+        {
+            RaycastHit hit;
+            if (!Physics.Raycast(transform.position, transform.forward, out hit, 4))
+            {
 
+            }
+
+
+            Vector3 targetDirection = path[currentIndex] - transform.position;
+            float stepAmount = turnSpeed * Time.deltaTime;
+
+            Vector3 newDirection = Vector3.RotateTowards(transform.forward, targetDirection, stepAmount, 0.0f);
+            transform.rotation = Quaternion.LookRotation(newDirection);
+
+            if (Vector3.Magnitude(path[currentIndex] - transform.position) < actualGotoNext)
+            {
+                if (currentIndex < path.Length - 1)
+                    currentIndex++;
+                else
+                    path = null;
+            }
+            transform.position += transform.forward * moveSpeed * Time.deltaTime;
+        }
         if (path == null && NodeManager.m_nodeGraph != null)
         {
             GetNewPath();
         }
-        else if (Vector3.Magnitude(path[currentIndex] - transform.position) < actualGotoNext)
-        {
-            if (currentIndex < path.Length - 1)
-            {
-                currentIndex++;
-                //for now snapping is ok
-                transform.LookAt(path[currentIndex]);
-            }
-            else
-                path = null;
-        }
-        transform.position += transform.forward * moveSpeed * Time.deltaTime;
+        
+        
 
     }
     private void GetNewPath()
     {
         path = FindPath(transform.position, new Vector3(Random.Range(-50.0f, 50.0f), 0, Random.Range(-50.0f, 50.0f)));
         currentIndex = 0;
-        transform.LookAt(path[currentIndex]);
     }
     private Vector3[] FindPath(Vector3 a_startPosition, Vector3 a_endPosition)
     {
@@ -60,7 +71,7 @@ public class Agent : MonoBehaviour
         Vector3[] tempVectors = { a_startPosition, a_endPosition };
         NativeArray<Vector3> startEndPos = new NativeArray<Vector3>(tempVectors, Allocator.Temp);
         pathfind.startEndPos = startEndPos;
-
+        
         //test for path finding time will need to improve the memory grabbing though its a bit slow and can be grouped
         //float time = Time.realtimeSinceStartup;
         pathfind.Execute();

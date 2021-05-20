@@ -13,7 +13,6 @@ public class NodeContainer : ScriptableObject
             NodeManager.m_nodeGraph = NodeGraph;
         }
     }
-
 }
 
 
