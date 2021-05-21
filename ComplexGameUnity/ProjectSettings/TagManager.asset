@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Node
   - ShaderHolder
+  - Agent
   layers:
   - Default
   - TransparentFX

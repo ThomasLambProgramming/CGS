@@ -5,6 +5,8 @@ using Unity.Collections;
 
 public class Agent : MonoBehaviour
 {
+    public float maxSpeed = 100f;
+    public float viewDistance = 4f;
     public float moveSpeed = 10f;
     public float turnSpeed = 2f;
     public float goNextDist = 2f;
@@ -12,28 +14,44 @@ public class Agent : MonoBehaviour
     Vector3[] path = null;
     //since its an array we need the index
     int currentIndex = 0;
-    
+    private Rigidbody rigid = null;
+
     public void Start()
     {
         //this is so we dont do distance sqrt but the a^2 + b^2
         actualGotoNext = goNextDist * goNextDist;
+        rigid = GetComponent<Rigidbody>();
+        if (rigid == null)
+        {
+            Debug.LogWarning("Agent does not have a rigidbody component attached");
+        }
     }
-    public void Update()
+    public void FixedUpdate()
     {
         if (path != null)
         {
-            RaycastHit hit;
-            if (!Physics.Raycast(transform.position, transform.forward, out hit, 4))
-            {
+            Vector3 targetDirection = path[currentIndex] - transform.position;
+            targetDirection.y = 0;
+            targetDirection = Vector3.Normalize(targetDirection);
 
+            Quaternion desiredRotation = Quaternion.LookRotation(targetDirection);
+            transform.rotation = Quaternion.Slerp(transform.rotation, desiredRotation, Time.deltaTime * turnSpeed);
+            rigid.velocity += targetDirection * moveSpeed * Time.deltaTime;
+            if (Vector3.Magnitude(rigid.velocity) > maxSpeed)
+            {
+                rigid.velocity = Vector3.Normalize(rigid.velocity) * maxSpeed;
             }
 
-
-            Vector3 targetDirection = path[currentIndex] - transform.position;
-            float stepAmount = turnSpeed * Time.deltaTime;
-
-            Vector3 newDirection = Vector3.RotateTowards(transform.forward, targetDirection, stepAmount, 0.0f);
-            transform.rotation = Quaternion.LookRotation(newDirection);
+            RaycastHit hit;
+            if (Physics.Raycast(transform.position, transform.forward, out hit, viewDistance))
+            {
+                if (hit.transform.CompareTag("Agent"))
+                {
+                    Vector3 forceToAvoid = (rigid.velocity + transform.position) - hit.transform.position;
+                    forceToAvoid = Vector3.Normalize(forceToAvoid) * turnSpeed;
+                    Vector3.RotateTowards(rigid.velocity, forceToAvoid, turnSpeed, 0.0f);
+                }
+            }
 
             if (Vector3.Magnitude(path[currentIndex] - transform.position) < actualGotoNext)
             {
@@ -42,14 +60,14 @@ public class Agent : MonoBehaviour
                 else
                     path = null;
             }
-            transform.position += transform.forward * moveSpeed * Time.deltaTime;
         }
+    }
+    public void Update()
+    {
         if (path == null && NodeManager.m_nodeGraph != null)
         {
             GetNewPath();
         }
-        
-        
 
     }
     private void GetNewPath()
@@ -71,7 +89,7 @@ public class Agent : MonoBehaviour
         Vector3[] tempVectors = { a_startPosition, a_endPosition };
         NativeArray<Vector3> startEndPos = new NativeArray<Vector3>(tempVectors, Allocator.Temp);
         pathfind.startEndPos = startEndPos;
-        
+
         //test for path finding time will need to improve the memory grabbing though its a bit slow and can be grouped
         //float time = Time.realtimeSinceStartup;
         pathfind.Execute();
