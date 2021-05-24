@@ -5,26 +5,21 @@ using Unity.Collections;
 
 public class Agent : MonoBehaviour
 {
-    public float maxSpeed = 100f;
-    public float viewDistance = 4f;
     public float moveSpeed = 10f;
+    public float viewDistance = 4f;
     public float turnSpeed = 2f;
     public float goNextDist = 2f;
+    private Vector3 velocity = Vector3.zero;
     private float actualGotoNext;
     Vector3[] path = null;
     //since its an array we need the index
     int currentIndex = 0;
-    private Rigidbody rigid = null;
+  
 
     public void Start()
     {
         //this is so we dont do distance sqrt but the a^2 + b^2
         actualGotoNext = goNextDist * goNextDist;
-        rigid = GetComponent<Rigidbody>();
-        if (rigid == null)
-        {
-            Debug.LogWarning("Agent does not have a rigidbody component attached");
-        }
     }
     public void FixedUpdate()
     {
@@ -33,26 +28,42 @@ public class Agent : MonoBehaviour
             Vector3 targetDirection = path[currentIndex] - transform.position;
             targetDirection.y = 0;
             targetDirection = Vector3.Normalize(targetDirection);
-
+            
             Quaternion desiredRotation = Quaternion.LookRotation(targetDirection);
-            transform.rotation = Quaternion.Slerp(transform.rotation, desiredRotation, Time.deltaTime * turnSpeed);
-            rigid.velocity += targetDirection * moveSpeed * Time.deltaTime;
-            if (Vector3.Magnitude(rigid.velocity) > maxSpeed)
-            {
-                rigid.velocity = Vector3.Normalize(rigid.velocity) * maxSpeed;
-            }
+            transform.rotation = Quaternion.Slerp(transform.rotation, desiredRotation, turnSpeed);
+            velocity += targetDirection * moveSpeed;
 
+            //if the raycast finds an agent adjust else rotate and move towards next point
             RaycastHit hit;
-            if (Physics.Raycast(transform.position, transform.forward, out hit, viewDistance))
+            Vector3 normalizedVel = Vector3.Normalize(velocity);
+            Debug.DrawLine(transform.position,transform.position + velocity * 0.2f, Color.blue);
+
+            int test = currentIndex;
+            while (test < path.Length - 1)
+            {
+                Debug.DrawLine(path[test],path[test + 1], Color.green);
+                test++;
+            }
+            if (Physics.Raycast(transform.position, normalizedVel, out hit, viewDistance))
             {
                 if (hit.transform.CompareTag("Agent"))
                 {
-                    Vector3 forceToAvoid = (rigid.velocity + transform.position) - hit.transform.position;
+                    
+                    Vector3 forceToAvoid = (velocity + transform.position) - hit.transform.position;
                     forceToAvoid = Vector3.Normalize(forceToAvoid) * turnSpeed;
-                    Vector3.RotateTowards(rigid.velocity, forceToAvoid, turnSpeed, 0.0f);
+                    velocity += forceToAvoid;
                 }
             }
-
+            if (Physics.Raycast(transform.position, normalizedVel, out hit, 1))
+            {
+                if (hit.transform.CompareTag("Ground"))
+                {
+                    transform.Translate(new Vector3(0,1,0));
+                }
+            }
+            velocity = Vector3.Normalize(velocity) * (moveSpeed * Time.deltaTime);
+            transform.position += velocity;
+            
             if (Vector3.Magnitude(path[currentIndex] - transform.position) < actualGotoNext)
             {
                 if (currentIndex < path.Length - 1)
@@ -79,8 +90,8 @@ public class Agent : MonoBehaviour
     {
         if (NodeManager.m_nodeGraph == null)
         {
-            Debug.Log("There is no node graph! Please create one from the node window" +
-                "Window/NodeGraph.");
+            Debug.LogWarning("There is no node graph! Please create one from the node window" +
+                " Window/NodeGraph.");
             return null;
         }
 
@@ -105,7 +116,14 @@ public class Agent : MonoBehaviour
         pathfind.pathResult.Dispose();
         startEndPos.Dispose();
 
-        return path;
+        //the path that the main loop was giving back was in the reverse order
+        Vector3[] reversedPath = new Vector3[path.Length];
+        for (int i = 0; i < path.Length; i++)
+        {
+            reversedPath[i] = path[path.Length - (1 + i)];
+        }
+        
+        return reversedPath;
     }
 }
 
