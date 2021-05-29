@@ -14,7 +14,7 @@ public class AgentContainer : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             for (int i = 0; i < amountToSpawn; i++)
-                Instantiate(Agent, new Vector3(0, 0, 0), Quaternion.identity, transform);
+                Instantiate(Agent, new Vector3(0, 1.2f, 0), Quaternion.identity, transform);
 
             amountSpawned += amountToSpawn;
         }

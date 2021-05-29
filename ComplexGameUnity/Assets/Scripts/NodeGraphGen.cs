@@ -101,7 +101,7 @@ public class NodeManager : MonoBehaviour
                 //makes sure it isnt added to the list of actual nodes
                 continue;
             }
-            else if (currentObject.layer == 10)
+            if (currentObject.layer == 10)
             {
                 Vector3 newNormal = currentObject.transform.TransformDirection(new Vector3(0, 1, 0));
                 List<Vector3> objectVerts = new List<Vector3>();
@@ -313,8 +313,6 @@ public class NodeManager : MonoBehaviour
                         if (position.x > xMax || position.x < xMin || position.z < zMin || position.z > zMax)
                             continue;
                        
-                        
-                        Debug.Log("TEST TO SEE IF UNWALK CHECK RUNS ON EMPTY");
                         Vector3 direction = Vector3.Normalize(m_nodeGraph[b].m_position - m_nodeGraph[a].m_position);
                         float distanceToUnwalk = Vector3.Distance(m_nodeGraph[a].m_position, position);
                         Vector3 positionOfCheck = m_nodeGraph[a].m_position + direction * distanceToUnwalk;

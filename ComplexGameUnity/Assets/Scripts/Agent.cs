@@ -7,40 +7,33 @@ public class Agent : MonoBehaviour
 {
     public float moveSpeed = 10f;
     public float viewDistance = 4f;
-    public float turnSpeed = 2f;
     public float goNextDist = 2f;
     private Vector3 velocity = Vector3.zero;
-    private float actualGotoNext;
-   
+    
     Vector3[] path = null;
     //since its an array we need the index
     int currentIndex = 0;
-  
-
-    public void Start()
-    {
-        //this is so we dont do distance sqrt but the a^2 + b^2
-        actualGotoNext = goNextDist * goNextDist;
-    }
+    
     public void FixedUpdate()
     {
         if (path != null)
         {
-            bool hasAvoided = false;
+            velocity = Vector3.Normalize(path[currentIndex] - transform.position);
+            velocity.y = 0f;
             RaycastHit rayHit;
-            if (Physics.Raycast(transform.position, Vector3.Normalize(velocity), out rayHit, viewDistance))
+            Debug.DrawLine(transform.position, transform.position + velocity * viewDistance, Color.blue);
+            if (Physics.Raycast(transform.position, velocity, out rayHit, viewDistance))
             {
                 if (rayHit.transform.CompareTag("Agent") || rayHit.transform.CompareTag("Obstacle"))
                 {
-                    hasAvoided = true;
-                    
+                   
                 }
             }
-            else
-            {
-                
-            }
-            if (Vector3.Magnitude(path[currentIndex] - transform.position) < actualGotoNext)
+            
+            transform.position += velocity * (Time.deltaTime * moveSpeed);
+            
+            
+            if (Vector3.Distance(path[currentIndex], transform.position) < goNextDist)
             {
                 if (currentIndex < path.Length - 1)
                     currentIndex++;
@@ -59,10 +52,10 @@ public class Agent : MonoBehaviour
     }
     private void GetNewPath()
     {
-        path = FindPath(transform.position, new Vector3(Random.Range(-50.0f, 50.0f), 0, Random.Range(-50.0f, 50.0f)));
+        path = FindPath();
         currentIndex = 0;
     }
-    private Vector3[] FindPath(Vector3 a_startPosition, Vector3 a_endPosition)
+    private Vector3[] FindPath()
     {
         if (NodeManager.m_nodeGraph == null)
         {
@@ -73,8 +66,15 @@ public class Agent : MonoBehaviour
 
         Vector3[] path;
         PathFindJob pathfind = new PathFindJob();
-        Vector3[] tempVectors = { a_startPosition, a_endPosition };
-        NativeArray<Vector3> startEndPos = new NativeArray<Vector3>(tempVectors, Allocator.Temp);
+        int[] StartEndIndex = {0, 0};
+
+        StartEndIndex[0] = NodeUtility.FindClosestNode(transform.position);
+        StartEndIndex[1] = Random.Range(0, NodeManager.m_nodeGraph.Length - 1);
+        while(StartEndIndex[1] == StartEndIndex[0])
+        {
+            StartEndIndex[1] = Random.Range(0, NodeManager.m_nodeGraph.Length - 1);
+        }
+        NativeArray<int> startEndPos = new NativeArray<int>(StartEndIndex, Allocator.Temp);
         pathfind.startEndPos = startEndPos;
 
         //test for path finding time will need to improve the memory grabbing though its a bit slow and can be grouped

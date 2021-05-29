@@ -38,7 +38,7 @@ public struct PathFindJob : IJob
         }
     }
     //index of the agents start and end nodes
-    [ReadOnly] public NativeArray<Vector3> startEndPos;
+    [ReadOnly] public NativeArray<int> startEndPos;
     
     public NativeArray<Vector3> pathResult;
     public void Execute()
@@ -49,9 +49,9 @@ public struct PathFindJob : IJob
         //find the closest node from the start and finish, after the path is found there will be an additional
         //check that can be performed to see if the point can be reached after the path (eg the closest may be at the
         //start of a mountain but there are no nodes and the end point is the peak)
-        Node startNode1 = NodeManager.m_nodeGraph[NodeUtility.FindClosestNode(startEndPos[0])];
-        Node endNode1 = NodeManager.m_nodeGraph[NodeUtility.FindClosestNode(startEndPos[1])];
-        
+        Node startNode1 = NodeManager.m_nodeGraph[startEndPos[0]];
+        Node endNode1 = NodeManager.m_nodeGraph[startEndPos[1]];
+      
         //giving it null as it is the starting node
         PathNode start = new PathNode(startNode1, null);
         
