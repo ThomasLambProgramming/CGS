@@ -192,7 +192,7 @@ public class NodeManager : MonoBehaviour
                 Vector2 nodepoint = new Vector2(nodeAlpha.position.x, nodeAlpha.position.z);
                 Vector2 unwalk = new Vector2(unwalkPoint.x, unwalkPoint.z);
 
-                if (Vector2.Distance(nodepoint, unwalk) < 1f)
+                if (Vector2.Distance(nodepoint, unwalk) < 0.7f)
                     if (Mathf.Abs(nodeAlpha.position.y - unwalkPoint.y) < m_ySpaceLimit)
                         nodesToDelete.Add(nodeAlpha);
             }
@@ -284,6 +284,36 @@ public class NodeManager : MonoBehaviour
                     bool isPassingThrough = false;
                     foreach (var position in m_unwalkablePoints)
                     {
+                        //this is doing an extent check so its not doing a massive normalize and distance check every time
+                        float xMin = 0;
+                        float zMax = 0;
+                        float zMin = 0;
+                        float xMax = 0;
+                        if (m_nodeGraph[a].m_position.x > m_nodeGraph[b].m_position.x)
+                        {
+                            xMax = m_nodeGraph[a].m_position.x;
+                            xMin = m_nodeGraph[b].m_position.x;
+                        }
+                        else
+                        {
+                            xMax = m_nodeGraph[b].m_position.x;
+                            xMin = m_nodeGraph[a].m_position.x;
+                        }
+                        if (m_nodeGraph[a].m_position.z > m_nodeGraph[b].m_position.z)
+                        {
+                            zMax = m_nodeGraph[a].m_position.z;
+                            zMin = m_nodeGraph[b].m_position.z;
+                        }                                    
+                        else                                 
+                        {                                    
+                            zMax = m_nodeGraph[b].m_position.z;
+                            zMin = m_nodeGraph[a].m_position.z;
+                        }
+
+                        if (position.x > xMax || position.x < xMin || position.z < zMin || position.z > zMax)
+                            continue;
+                       
+                        
                         Debug.Log("TEST TO SEE IF UNWALK CHECK RUNS ON EMPTY");
                         Vector3 direction = Vector3.Normalize(m_nodeGraph[b].m_position - m_nodeGraph[a].m_position);
                         float distanceToUnwalk = Vector3.Distance(m_nodeGraph[a].m_position, position);
@@ -297,14 +327,6 @@ public class NodeManager : MonoBehaviour
                     //if its going through a unwalkable dont make the connection
                     if (isPassingThrough)
                         continue;
-                    //----------------------------------------
-
-                    //ADD FOR OVERLAP OF ADDED NODES (optional not needed for main use)
-
-
-
-
-                    //----------------------------------------
 
                     int indexA = -1;
                     int indexB = -1;
@@ -313,10 +335,8 @@ public class NodeManager : MonoBehaviour
                     bool nullFound = false;
                     for (int i = 0; i < m_nodeConnectionAmount; i++)
                     {
-                        
                         if (m_nodeGraph[a].connections[i] == null)
                         {
-                            
                             indexA = i;
                             nullFound = true;
                             break;

@@ -11,6 +11,7 @@ public class Agent : MonoBehaviour
     public float goNextDist = 2f;
     private Vector3 velocity = Vector3.zero;
     private float actualGotoNext;
+   
     Vector3[] path = null;
     //since its an array we need the index
     int currentIndex = 0;
@@ -25,45 +26,20 @@ public class Agent : MonoBehaviour
     {
         if (path != null)
         {
-            Vector3 targetDirection = path[currentIndex] - transform.position;
-            targetDirection.y = 0;
-            targetDirection = Vector3.Normalize(targetDirection);
-            
-            Quaternion desiredRotation = Quaternion.LookRotation(targetDirection);
-            transform.rotation = Quaternion.Slerp(transform.rotation, desiredRotation, turnSpeed);
-            velocity += targetDirection * moveSpeed;
-
-            //if the raycast finds an agent adjust else rotate and move towards next point
-            RaycastHit hit;
-            Vector3 normalizedVel = Vector3.Normalize(velocity);
-            Debug.DrawLine(transform.position,transform.position + velocity * 0.2f, Color.blue);
-
-            int test = currentIndex;
-            while (test < path.Length - 1)
+            bool hasAvoided = false;
+            RaycastHit rayHit;
+            if (Physics.Raycast(transform.position, Vector3.Normalize(velocity), out rayHit, viewDistance))
             {
-                Debug.DrawLine(path[test],path[test + 1], Color.green);
-                test++;
-            }
-            if (Physics.Raycast(transform.position, normalizedVel, out hit, viewDistance))
-            {
-                if (hit.transform.CompareTag("Agent"))
+                if (rayHit.transform.CompareTag("Agent") || rayHit.transform.CompareTag("Obstacle"))
                 {
+                    hasAvoided = true;
                     
-                    Vector3 forceToAvoid = (velocity + transform.position) - hit.transform.position;
-                    forceToAvoid = Vector3.Normalize(forceToAvoid) * turnSpeed;
-                    velocity += forceToAvoid;
                 }
             }
-            if (Physics.Raycast(transform.position, normalizedVel, out hit, 1))
+            else
             {
-                if (hit.transform.CompareTag("Ground"))
-                {
-                    transform.Translate(new Vector3(0,1,0));
-                }
+                
             }
-            velocity = Vector3.Normalize(velocity) * (moveSpeed * Time.deltaTime);
-            transform.position += velocity;
-            
             if (Vector3.Magnitude(path[currentIndex] - transform.position) < actualGotoNext)
             {
                 if (currentIndex < path.Length - 1)
