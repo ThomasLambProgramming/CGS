@@ -126,7 +126,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba4345c20bb4fe24785b636d5a039791, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 10
-  viewDistance: 4
-  turnSpeed: 2
-  goNextDist: 2
+  moveSpeed: 20
+  stoppingSpeed: 5
+  goNextDist: 3
+  seeAheadDistance: 1
+  maxAvoidForce: 2
+  hasBeenAdjusted: 0
+  rb: {fileID: 0}

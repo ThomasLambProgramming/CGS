@@ -45,6 +45,17 @@ public class NodeManager : MonoBehaviour
             if (nodeScriptableObject.NodeGraph != null)
                 m_nodeGraph = nodeScriptableObject.NodeGraph;
     }
+    public void Start()
+    {
+        NodeContainer[] temparray = Resources.FindObjectsOfTypeAll<NodeContainer>();
+        if (temparray != null && temparray.Length > 0)
+            if (temparray[0] != null)
+                nodeScriptableObject = temparray[0];
+
+        if (nodeScriptableObject != null && m_nodeGraph == null)
+            if (nodeScriptableObject.NodeGraph != null)
+                m_nodeGraph = nodeScriptableObject.NodeGraph;
+    }
 
     //Static variables for use by the whole system
     public static float m_nodeDistance = 5;
@@ -163,8 +174,6 @@ public class NodeManager : MonoBehaviour
         {
             nodeScriptableObject.NodeGraph[i] = m_nodeGraph[i];
         }
-        EditorUtility.SetDirty(nodeScriptableObject);
-        AssetDatabase.SaveAssets();
 
         foreach(var node1 in m_nodeGraph)
         {
