@@ -37,16 +37,8 @@ public class Test : MonoBehaviour
         {
             if (hit.transform.CompareTag("Agent"))
             {
-                Vector3 ahead = transform.position + rb.velocity.normalized * seeAheadDistance;
-                Vector3 avoidForce = ahead - hit.transform.position;
-                if (!hasBeenAdjusted)
-                {
-                    avoidForce.x += 2.0f;
-                    Test temp = hit.transform.GetComponent<Test>();
-                    temp.hasBeenAdjusted = true;
-                }
-                else
-                    avoidForce.x -= 2.0f;
+                
+                Vector3 avoidForce = new Vector3(rb.velocity.z, 0, rb.velocity.x);
                 avoidForce = Vector3.Normalize(avoidForce) * maxAvoidForce;
 
                 rb.velocity += avoidForce;

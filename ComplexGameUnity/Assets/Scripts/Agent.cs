@@ -12,6 +12,8 @@ public class Agent : MonoBehaviour
     public float seeAheadDistance = 4;
     public float maxAvoidForce = 2f;
 
+    public NodeContainer pathData = null;
+
     //since its an array we need the index
     int currentIndex = 0;
     public bool hasBeenAdjusted = false;
@@ -21,25 +23,25 @@ public class Agent : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
     }
+
     public void FixedUpdate()
     {
         if (path != null)
         {
-
             Debug.DrawLine(transform.position, transform.position + rb.velocity, Color.red);
-            for (int i = 0; i < path.Length; i++)
-            {
-                if (i == 0)
-                {
-                    Debug.DrawLine(transform.position, path[currentIndex], Color.blue);
-                }
-                else
-                {
-                    Debug.DrawLine(path[i - 1], path[i], Color.blue);
-                }
-            }
+            // for (int i = 0; i < path.Length; i++)
+            // {
+            //     if (i == 0)
+            //     {
+            //         Debug.DrawLine(transform.position, path[currentIndex], Color.blue);
+            //     }
+            //     else
+            //     {
+            //         Debug.DrawLine(path[i - 1], path[i], Color.blue);
+            //     }
+            // }
             Vector3 direction = path[currentIndex] - transform.position;
-            direction.y = transform.position.y;
+            direction.y = 0;
             direction.Normalize();
             direction *= moveSpeed;
 
@@ -50,32 +52,19 @@ public class Agent : MonoBehaviour
             {
                 if (hit.transform.CompareTag("Agent"))
                 {
-                    Agent hitAgent = hit.transform.GetComponent<Agent>();
-                    //if the two agents velocities are too different then apply the change
-                    if (Vector3.Dot(hitAgent.rb.velocity, rb.velocity) < 0.8f)
-                    {
-                        Vector3 ahead = transform.position + rb.velocity.normalized * seeAheadDistance;
-                        Vector3 avoidForce = ahead - hit.transform.position;
-                        if (!hasBeenAdjusted)
-                        {
-                            avoidForce.x += 2.0f;
-                            hitAgent.hasBeenAdjusted = true;
-                        }
-                        else
-                            avoidForce.x -= 2.0f;
-                        avoidForce = Vector3.Normalize(avoidForce) * maxAvoidForce;
+                    Vector3 avoidForce = new Vector3(rb.velocity.z, 0, rb.velocity.x);
+                    avoidForce = Vector3.Normalize(avoidForce) * maxAvoidForce;
 
-                        rb.velocity += avoidForce;
-                    }
+                    rb.velocity += avoidForce;
                 }
             }
+
             float velMag = rb.velocity.magnitude;
             if (velMag > moveSpeed)
             {
-                float overAmount = velMag - moveSpeed;
-                rb.velocity += -rb.velocity.normalized * overAmount;
+                rb.velocity = rb.velocity.normalized * moveSpeed;
             }
-            
+
             if (Vector3.Distance(path[currentIndex], transform.position) < goNextDist)
             {
                 if (currentIndex < path.Length - 1)
@@ -88,38 +77,43 @@ public class Agent : MonoBehaviour
             }
         }
     }
+
     public void Update()
     {
-        if (path == null && NodeManager.m_nodeGraph != null)
+        if (path == null && pathData.NodeGraph != null)
         {
             GetNewPath();
         }
-
     }
+
     private void GetNewPath()
     {
         path = FindPath();
         currentIndex = 0;
     }
+
     private Vector3[] FindPath()
     {
-        if (NodeManager.m_nodeGraph == null)
+        if (pathData.NodeGraph == null)
         {
             Debug.LogWarning("There is no node graph! Please create one from the node window" +
-                " Window/NodeGraph.");
+                             " Window/NodeGraph.");
             return null;
         }
 
         Vector3[] path;
         PathFindJob pathfind = new PathFindJob();
-        int[] StartEndIndex = { 0, 0 };
+        pathfind.NodeData = pathData.NodeGraph;
 
-        StartEndIndex[0] = NodeUtility.FindClosestNode(transform.position);
-        StartEndIndex[1] = Random.Range(0, NodeManager.m_nodeGraph.Length - 1);
+        int[] StartEndIndex = {0, 0};
+
+        StartEndIndex[0] = FindClosestNode(transform.position);
+        StartEndIndex[1] = Random.Range(0, pathData.NodeGraph.Length - 1);
         while (StartEndIndex[1] == StartEndIndex[0])
         {
-            StartEndIndex[1] = Random.Range(0, NodeManager.m_nodeGraph.Length - 1);
+            StartEndIndex[1] = Random.Range(0, pathData.NodeGraph.Length - 1);
         }
+
         NativeArray<int> startEndPos = new NativeArray<int>(StartEndIndex, Allocator.Temp);
         pathfind.startEndPos = startEndPos;
 
@@ -134,6 +128,7 @@ public class Agent : MonoBehaviour
             Debug.Log("Pathresult was null");
             return null;
         }
+
         path = pathfind.pathResult.ToArray();
         pathfind.pathResult.Dispose();
         startEndPos.Dispose();
@@ -147,6 +142,25 @@ public class Agent : MonoBehaviour
 
         return reversedPath;
     }
+
+    public int FindClosestNode(Vector3 a_position)
+    {
+        if (pathData.NodeGraph == null)
+            return -1;
+
+        int closestNode = -1;
+        float distance = 1000000;
+
+        for (int i = 0; i < pathData.NodeGraph.Length; i++)
+        {
+            float nodeDist = Vector3.Magnitude(pathData.NodeGraph[i].m_position - a_position);
+            if (nodeDist < distance)
+            {
+                distance = nodeDist;
+                closestNode = i;
+            }
+        }
+
+        return closestNode;
+    }
 }
-
-

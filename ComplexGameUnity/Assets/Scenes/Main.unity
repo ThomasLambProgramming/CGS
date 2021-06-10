@@ -842,7 +842,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f7c6360defd18e49afe846ec7be4c94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  amountToSpawn: 10
+  amountToSpawn: 40
   Agent: {fileID: 5375550274626214562, guid: 4265b2599406dc149ac968ccbf9a1fc6, type: 3}
   amountSpawned: 0
 --- !u!4 &2014943556

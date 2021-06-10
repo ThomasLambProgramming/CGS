@@ -41,16 +41,18 @@ public struct PathFindJob : IJob
     [ReadOnly] public NativeArray<int> startEndPos;
     
     public NativeArray<Vector3> pathResult;
+    public Node[] NodeData;
+    
     public void Execute()
     {
-        Heap<PathNode> openNodes = new Heap<PathNode>(NodeManager.m_nodeGraph.Length);
+        Heap<PathNode> openNodes = new Heap<PathNode>(NodeData.Length);
         HashSet<Node> closedNodes = new HashSet<Node>();
 
         //find the closest node from the start and finish, after the path is found there will be an additional
         //check that can be performed to see if the point can be reached after the path (eg the closest may be at the
         //start of a mountain but there are no nodes and the end point is the peak)
-        Node startNode1 = NodeManager.m_nodeGraph[startEndPos[0]];
-        Node endNode1 = NodeManager.m_nodeGraph[startEndPos[1]];
+        Node startNode1 = NodeData[startEndPos[0]];
+        Node endNode1 = NodeData[startEndPos[1]];
       
         //giving it null as it is the starting node
         PathNode start = new PathNode(startNode1, null);
@@ -91,13 +93,13 @@ public struct PathFindJob : IJob
 
             foreach (Edge connection in currentNode.node.connections)
             {
-                if (connection == null || connection.to == -1 || closedNodes.Contains(NodeManager.m_nodeGraph[connection.to]))
+                if (connection == null || connection.to == -1 || closedNodes.Contains(NodeData[connection.to]))
                     continue;
 
                 bool isOpen = false;
                 for (int i = 0; i < openNodes.Count; i++)
                 {
-                    if (openNodes.items[i].node == NodeManager.m_nodeGraph[connection.to])
+                    if (openNodes.items[i].node == NodeData[connection.to])
                     {
                         isOpen = true;
                         break;
@@ -107,7 +109,7 @@ public struct PathFindJob : IJob
                 if (isOpen)
                     continue;
 
-                PathNode node = new PathNode(NodeManager.m_nodeGraph[connection.to], currentNode);
+                PathNode node = new PathNode(NodeData[connection.to], currentNode);
                 node.m_gCost = Vector3.Distance(node.node.m_position, currentNode.node.m_position) + currentNode.m_gCost;
 
                 //float distanceToConnection = currentNode.m_gCost + Vector3.Distance(currentNode.node.m_position, NodeManager.m_nodeGraph[connection.to].m_position);
@@ -119,28 +121,6 @@ public struct PathFindJob : IJob
         //add a end case if a path cannot be found
     }
 }
-public class NodeUtility : MonoBehaviour
-{
-    //probably need to fix all this
-    public static int FindClosestNode(Vector3 a_position)
-    {
-        if (NodeManager.m_nodeGraph == null)
-            return -1;
 
-        int closestNode = -1;
-        float distance = 1000000;
-
-        for (int i = 0; i < NodeManager.m_nodeGraph.Length; i++)
-        {
-            float nodeDist = Vector3.Magnitude(NodeManager.m_nodeGraph[i].m_position - a_position);
-            if (nodeDist < distance)
-            {
-                distance = nodeDist;
-                closestNode = i;
-            }
-        }
-        return closestNode;
-    }
-}
 
 

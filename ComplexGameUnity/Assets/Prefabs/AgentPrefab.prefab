@@ -129,7 +129,8 @@ MonoBehaviour:
   moveSpeed: 20
   stoppingSpeed: 5
   goNextDist: 3
-  seeAheadDistance: 1
-  maxAvoidForce: 2
+  seeAheadDistance: 10
+  maxAvoidForce: 40
+  pathData: {fileID: 11400000, guid: d897576bd2bf6d54c99fd6003d5a5260, type: 2}
   hasBeenAdjusted: 0
   rb: {fileID: 0}

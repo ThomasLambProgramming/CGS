@@ -31,31 +31,8 @@ public class Edge
 public class NodeManager : MonoBehaviour
 {
     public static NodeContainer nodeScriptableObject = null;
-
-    //Len is awesome below [] method thingy he showed its amazing
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
-    public static void OnStart()
-    {
-        NodeContainer[] temparray = Resources.FindObjectsOfTypeAll<NodeContainer>();
-        if (temparray != null && temparray.Length > 0)
-            if (temparray[0] != null)
-                nodeScriptableObject = temparray[0];
-
-        if (nodeScriptableObject != null && m_nodeGraph == null)
-            if (nodeScriptableObject.NodeGraph != null)
-                m_nodeGraph = nodeScriptableObject.NodeGraph;
-    }
-    public void Start()
-    {
-        NodeContainer[] temparray = Resources.FindObjectsOfTypeAll<NodeContainer>();
-        if (temparray != null && temparray.Length > 0)
-            if (temparray[0] != null)
-                nodeScriptableObject = temparray[0];
-
-        if (nodeScriptableObject != null && m_nodeGraph == null)
-            if (nodeScriptableObject.NodeGraph != null)
-                m_nodeGraph = nodeScriptableObject.NodeGraph;
-    }
+    public static GameObject walkableObject = null;
+    
 
     //Static variables for use by the whole system
     public static float m_nodeDistance = 5;
@@ -65,16 +42,42 @@ public class NodeManager : MonoBehaviour
     static List<Vector3> m_unwalkablePoints = new List<Vector3>();
     public static Node[] m_nodeGraph = null;
 
-    public static void ChangeValues(float a_nodeDistance, int a_connectionAmount, float a_yLimit)
+    public static void ChangeValues(
+        float a_nodeDistance, 
+        int a_connectionAmount, 
+        float a_yLimit, 
+        NodeContainer nodeContainer, 
+        GameObject a_walkableObject)
     {
         m_nodeDistance = a_nodeDistance;
         m_nodeConnectionAmount = a_connectionAmount;
         m_ySpaceLimit = a_yLimit;
+
+        nodeScriptableObject = nodeContainer;
+        walkableObject = a_walkableObject;
     }
 
     public static void CreateNodes(int a_layerMask)
     {
-        GameObject[] foundObjects = FindObjectsOfType<GameObject>();
+        //Note. I dont like how unity doesnt have a return all children
+        //(or at least i couldn't see one)
+        GameObject[] foundObjects;
+        if (walkableObject.transform.childCount == 0)
+            foundObjects = new[] {walkableObject};
+        
+        else if (walkableObject.GetComponent<MeshFilter>())
+        {
+            foundObjects = new GameObject[walkableObject.transform.childCount + 1];
+            for (int i = 0; i < walkableObject.transform.childCount; i++)
+                foundObjects[i + 1] = walkableObject.transform.GetChild(i).gameObject;
+        }
+        else
+        {
+            foundObjects = new GameObject[walkableObject.transform.childCount];
+            for (int i = 0; i < walkableObject.transform.childCount; i++)
+                foundObjects[i] = walkableObject.transform.GetChild(i).gameObject;
+        }
+
         List<NodeCheck> nodes = new List<NodeCheck>();
 
         foreach (GameObject currentObject in foundObjects)
@@ -174,21 +177,6 @@ public class NodeManager : MonoBehaviour
         {
             nodeScriptableObject.NodeGraph[i] = m_nodeGraph[i];
         }
-
-        foreach(var node1 in m_nodeGraph)
-        {
-            foreach(var node2 in m_nodeGraph)
-            {
-                if (node1 == node2)
-                    continue;
-                if (Vector3.Distance(node1.m_position,node2.m_position) < 0.4f)
-                {
-                    Debug.Log("Still overlaps");
-                }
-            }
-        }
-
-
     }
 
     private static void UnWalkable(ref List<NodeCheck> nodes)
@@ -396,14 +384,14 @@ public class NodeManager : MonoBehaviour
         if (m_nodeGraph == null)
             return;
 
-        foreach (var node in m_nodeGraph)
+        foreach (var node in nodeScriptableObject.NodeGraph)
         {
             for (int i = 0; i < node.connections.Length - 1; i++)
             {
                 //if the connection isnt null then draw a line of it this whole function is self explaining
                 if (node.connections[i] != null)
                     if(node.connections[i].to != -1)
-                        Debug.DrawLine(node.m_position, m_nodeGraph[node.connections[i].to].m_position);
+                        Debug.DrawLine(node.m_position, nodeScriptableObject.NodeGraph[node.connections[i].to].m_position);
             }
         }
     }
