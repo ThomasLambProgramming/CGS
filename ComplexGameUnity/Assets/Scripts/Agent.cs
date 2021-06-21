@@ -52,10 +52,15 @@ public class Agent : MonoBehaviour
             {
                 if (hit.transform.CompareTag("Agent"))
                 {
-                    Vector3 avoidForce = new Vector3(rb.velocity.z, 0, rb.velocity.x);
-                    avoidForce = Vector3.Normalize(avoidForce) * maxAvoidForce;
+                    Rigidbody otherAgent = hit.rigidbody;
+                    //if the dot of their velocities are almost opposite then we want to avoid
+                    if (Vector3.Dot(otherAgent.velocity.normalized, rb.velocity.normalized) < -0.7f)
+                    {
+                        Vector3 avoidForce = new Vector3(-rb.velocity.z, 0, rb.velocity.x);
+                        avoidForce = Vector3.Normalize(avoidForce) * (maxAvoidForce);
 
-                    rb.velocity += avoidForce;
+                        rb.velocity += avoidForce;
+                    }
                 }
             }
 

@@ -126,9 +126,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba4345c20bb4fe24785b636d5a039791, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 20
+  moveSpeed: 15
   stoppingSpeed: 5
-  goNextDist: 3
+  goNextDist: 8
   seeAheadDistance: 10
   maxAvoidForce: 40
   pathData: {fileID: 11400000, guid: d897576bd2bf6d54c99fd6003d5a5260, type: 2}
