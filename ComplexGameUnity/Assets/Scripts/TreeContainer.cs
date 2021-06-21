@@ -1,5 +1,17 @@
 ﻿using System;
 
+/*
+* File: TreeContainer.cs
+*
+* Author: Thomas Lamb (s200498@students.aie.edu.au)
+* Date Created: 10th May 2021
+* Date Last Modified: 12th June 2021
+*
+* This is a binary tree / heap container 
+* Just used to have a more efficient way to sort 
+* data to always have the lowest value at the front for pathfinding
+ * 
+*/
 //this is a tree like container for pathfinding, its purpose is to have the nodes sorted by cost
 //rather than the original version of pathfinding where it cycled through the openset 
 //most of this is copied from a tutorial as there wasnt much i could change without breaking the implementation

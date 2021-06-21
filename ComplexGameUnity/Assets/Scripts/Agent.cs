@@ -29,17 +29,17 @@ public class Agent : MonoBehaviour
         if (path != null)
         {
             Debug.DrawLine(transform.position, transform.position + rb.velocity, Color.red);
-            // for (int i = 0; i < path.Length; i++)
-            // {
-            //     if (i == 0)
-            //     {
-            //         Debug.DrawLine(transform.position, path[currentIndex], Color.blue);
-            //     }
-            //     else
-            //     {
-            //         Debug.DrawLine(path[i - 1], path[i], Color.blue);
-            //     }
-            // }
+            for (int i = 0; i < path.Length; i++)
+            {
+                if (i == 0)
+                {
+                    Debug.DrawLine(transform.position, path[currentIndex], Color.blue);
+                }
+                else if (i > currentIndex)
+                {
+                    Debug.DrawLine(path[i - 1], path[i], Color.blue);
+                }
+            }
             Vector3 direction = path[currentIndex] - transform.position;
             direction.y = 0;
             direction.Normalize();

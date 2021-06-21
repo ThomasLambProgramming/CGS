@@ -5,14 +5,6 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "NodeData", menuName = "ScriptableObjects/NodeData", order = 1)]
 public class NodeContainer : ScriptableObject
 {
-    public Node[] NodeGraph = null;
-    void Start()
-    {
-        if (NodeGraph != null && NodeManager.m_nodeGraph == null)
-        {
-            NodeManager.m_nodeGraph = NodeGraph;
-        }
-    }
+    //we just need to save the node data for use later
+    public PathNode[] NodeGraph = null;
 }
-
-

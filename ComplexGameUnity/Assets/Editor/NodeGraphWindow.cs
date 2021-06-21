@@ -44,17 +44,31 @@ public class NodeGraphWindow : EditorWindow
         
         if (GUILayout.Button("Bake Nodes"))
         {
+            EditorUtility.SetDirty(nodeContainer);
             //float time = Time.realtimeSinceStartup;
             if (walkableObjects == null || nodeContainer == null)
                 Debug.LogWarning("Please fill walkable container and node container fields before baking");
             
             NodeManager.ChangeValues(m_nodeDistance, m_nodeConnectionAmount,m_ySpaceLimit, nodeContainer, walkableObjects);
             NodeManager.CreateNodes(m_layerMask);
+            AssetDatabase.SaveAssets();
             //Debug.Log(Time.realtimeSinceStartup - time);
         }
         if (GUILayout.Button("Show Links"))
         {
-            NodeManager.DrawNodes();
+            if (nodeContainer.NodeGraph == null)
+                return;
+
+            foreach (var node in nodeContainer.NodeGraph)
+            {
+                for (int i = 0; i < node.connections.Length - 1; i++)
+                {
+                    //if the connection isnt null then draw a line of it this whole function is self explaining
+                    if (node.connections[i] != null)
+                        if(node.connections[i].to != -1)
+                            Debug.DrawLine(node.m_position, nodeContainer.NodeGraph[node.connections[i].to].m_position);
+                }
+            }
         }
     }
     private void LoadFile()

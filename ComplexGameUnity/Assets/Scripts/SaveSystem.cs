@@ -2,6 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+/*
+* File: SaveSystem.cs
+*
+* Author: Thomas Lamb (s200498@students.aie.edu.au)
+* Date Created: 10th May 2021
+* Date Last Modified: Saturday 12 June 2021
+*
+* Save system for the nodegraph editor window
+* 
+*/
 
 [SerializeField]
 public class EditorValues
@@ -10,6 +20,7 @@ public class EditorValues
     public int m_nodeConnectionAmount = 0;
     public float m_ySpaceLimit = 0;
 }
+//class to save the values needed
 public class SaveSystem
 {
     public static void SaveData(
@@ -31,8 +42,10 @@ public class SaveSystem
     }
     public static EditorValues LoadData(string a_filePath)
     {
+        //if the file doesnt exist dont do anything
         if (!File.Exists(a_filePath))
             return null;
+        //else open a streamreader and read everything needed
         StreamReader stream = new StreamReader(a_filePath);
         string jsonData = stream.ReadToEnd();
         
