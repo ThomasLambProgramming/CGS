@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using UnityEditor.Experimental.GraphView;
 
 public class NodeGraphWindow : EditorWindow
 {
@@ -8,7 +9,8 @@ public class NodeGraphWindow : EditorWindow
     float m_ySpaceLimit = 1;
     bool loaded = false;
 
-    
+    private int walkableLayers = 0;
+    private int unwalkableLayers = 0;
     
     private static GameObject walkableObjects = null;
     private static NodeContainer nodeContainer = null;
@@ -30,7 +32,7 @@ public class NodeGraphWindow : EditorWindow
             loaded = true;
         }
         
-        SaveSystem.SaveData(m_nodeDistance, m_nodeConnectionAmount, m_ySpaceLimit, Application.dataPath + "/Editor/Config.json");
+        SaveSystem.SaveData(m_nodeDistance, m_nodeConnectionAmount, m_ySpaceLimit, Application.dataPath + "/Editor/Config.json", walkableLayers, unwalkableLayers);
         
         GUILayout.Label("Node Settings", EditorStyles.boldLabel);
         m_nodeDistance = EditorGUILayout.FloatField("Node Join Distance", m_nodeDistance);
@@ -39,7 +41,9 @@ public class NodeGraphWindow : EditorWindow
 
         walkableObjects = (GameObject) EditorGUILayout.ObjectField("Environment Container", walkableObjects, typeof(GameObject), true);
         nodeContainer = (NodeContainer)EditorGUILayout.ObjectField("Node Container", nodeContainer, typeof(NodeContainer),true);
-        
+
+        walkableLayers = EditorGUILayout.IntField("Walkable Layer", walkableLayers);
+        unwalkableLayers = EditorGUILayout.IntField("Not Walkable Layer", unwalkableLayers);
         
         
         if (GUILayout.Button("Bake Nodes"))
@@ -49,7 +53,7 @@ public class NodeGraphWindow : EditorWindow
             if (walkableObjects == null || nodeContainer == null)
                 Debug.LogWarning("Please fill walkable container and node container fields before baking");
             
-            NodeManager.ChangeValues(m_nodeDistance, m_nodeConnectionAmount,m_ySpaceLimit, nodeContainer, walkableObjects);
+            NodeManager.ChangeValues(m_nodeDistance, m_nodeConnectionAmount,m_ySpaceLimit, nodeContainer, walkableObjects, walkableLayers, unwalkableLayers);
             NodeManager.CreateNodes(m_layerMask);
             AssetDatabase.SaveAssets();
             //Debug.Log(Time.realtimeSinceStartup - time);
@@ -81,5 +85,7 @@ public class NodeGraphWindow : EditorWindow
         m_nodeDistance = loadedSettings.m_distance;
         m_nodeConnectionAmount = loadedSettings.m_nodeConnectionAmount;
         m_ySpaceLimit = loadedSettings.m_ySpaceLimit;
+        walkableLayers = loadedSettings.walkableLayer;
+        unwalkableLayers = loadedSettings.unwalkablelayer;
     }
 }

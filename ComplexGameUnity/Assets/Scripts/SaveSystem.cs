@@ -19,6 +19,8 @@ public class EditorValues
     public float m_distance = 0;
     public int m_nodeConnectionAmount = 0;
     public float m_ySpaceLimit = 0;
+    public int walkableLayer = 0;
+    public int unwalkablelayer = 0;
 }
 //class to save the values needed
 public class SaveSystem
@@ -27,12 +29,16 @@ public class SaveSystem
         float a_nodeDistance,
         int a_nodeConnectionAmount,
         float a_ylimit,
-        string a_filePath)
+        string a_filePath,
+        int walklayer,
+        int unwalkLayer)
     {
         EditorValues toSave = new EditorValues();
         toSave.m_distance = a_nodeDistance;
         toSave.m_nodeConnectionAmount = a_nodeConnectionAmount;
         toSave.m_ySpaceLimit = a_ylimit;
+        toSave.walkableLayer = walklayer;
+        toSave.unwalkablelayer = unwalkLayer;
 
         //this gets the json string and then adds it to the file specified
         StreamWriter stream = new StreamWriter(a_filePath);

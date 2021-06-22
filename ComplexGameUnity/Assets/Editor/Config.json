@@ -1,5 +1,7 @@
 {
     "m_distance": 15.0,
     "m_nodeConnectionAmount": 8,
-    "m_ySpaceLimit": 0.10000000149011612
+    "m_ySpaceLimit": 0.10000000149011612,
+    "walkableLayer": 24,
+    "unwalkablelayer": 25
 }

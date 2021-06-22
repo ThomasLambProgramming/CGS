@@ -103,7 +103,6 @@ public struct PathFindJob : IJob
 
             if (currentNode == endNode1)
             {
-                Debug.Log(loops);
                 //We found the end node pathfinding is done
                 List<Vector3> path = new List<Vector3>();
                 //add the current/end node so that its just the parents being added in the loop

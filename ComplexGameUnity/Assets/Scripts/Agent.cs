@@ -11,7 +11,8 @@ public class Agent : MonoBehaviour
     Vector3[] path = null;
     public float seeAheadDistance = 4;
     public float maxAvoidForce = 2f;
-
+    public bool debugMode = false;
+    public bool avoidance = false;
     public NodeContainer pathData = null;
 
     //since its an array we need the index
@@ -28,18 +29,22 @@ public class Agent : MonoBehaviour
     {
         if (path != null)
         {
-            Debug.DrawLine(transform.position, transform.position + rb.velocity, Color.red);
-            for (int i = 0; i < path.Length; i++)
+            if (debugMode)
             {
-                if (i == 0)
+                Debug.DrawLine(transform.position, transform.position + rb.velocity, Color.red);
+                for (int i = 0; i < path.Length; i++)
                 {
-                    Debug.DrawLine(transform.position, path[currentIndex], Color.blue);
-                }
-                else if (i > currentIndex)
-                {
-                    Debug.DrawLine(path[i - 1], path[i], Color.blue);
+                    if (i == 0)
+                    {
+                        Debug.DrawLine(transform.position, path[currentIndex], Color.blue);
+                    }
+                    else if (i > currentIndex)
+                    {
+                        Debug.DrawLine(path[i - 1], path[i], Color.blue);
+                    }
                 }
             }
+
             Vector3 direction = path[currentIndex] - transform.position;
             direction.y = 0;
             direction.Normalize();
@@ -47,19 +52,22 @@ public class Agent : MonoBehaviour
 
             rb.velocity += direction;
 
-            RaycastHit hit;
-            if (Physics.Raycast(transform.position, rb.velocity.normalized, out hit, seeAheadDistance))
+            if (avoidance)
             {
-                if (hit.transform.CompareTag("Agent"))
+                RaycastHit hit;
+                if (Physics.Raycast(transform.position, rb.velocity.normalized, out hit, seeAheadDistance))
                 {
-                    Rigidbody otherAgent = hit.rigidbody;
-                    //if the dot of their velocities are almost opposite then we want to avoid
-                    if (Vector3.Dot(otherAgent.velocity.normalized, rb.velocity.normalized) < -0.7f)
+                    if (hit.transform.CompareTag("Agent"))
                     {
-                        Vector3 avoidForce = new Vector3(-rb.velocity.z, 0, rb.velocity.x);
-                        avoidForce = Vector3.Normalize(avoidForce) * (maxAvoidForce);
+                        Rigidbody otherAgent = hit.rigidbody;
+                        //if the dot of their velocities are almost opposite then we want to avoid
+                        if (Vector3.Dot(otherAgent.velocity.normalized, rb.velocity.normalized) < -0.7f)
+                        {
+                            Vector3 avoidForce = new Vector3(-rb.velocity.z, 0, rb.velocity.x);
+                            avoidForce = Vector3.Normalize(avoidForce) * (maxAvoidForce);
 
-                        rb.velocity += avoidForce;
+                            rb.velocity += avoidForce;
+                        }
                     }
                 }
             }
@@ -70,7 +78,7 @@ public class Agent : MonoBehaviour
                 rb.velocity = rb.velocity.normalized * moveSpeed;
             }
 
-            if (Vector3.Distance(path[currentIndex], transform.position) < goNextDist)
+            if (Vector3.SqrMagnitude(path[currentIndex] - transform.position) < goNextDist)
             {
                 if (currentIndex < path.Length - 1)
                     currentIndex++;

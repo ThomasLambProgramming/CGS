@@ -52,6 +52,9 @@ public class NodeManager : MonoBehaviour
     public static int m_nodeConnectionAmount = 50000;
     public static float m_ySpaceLimit = 1;
 
+    private static int walkableLayer = 0;
+    private static int unwalkableLayer = 0;
+    
     
     static List<Vector3> m_unwalkablePoints = new List<Vector3>();
     public static Node[] m_nodeGraph = null;
@@ -62,7 +65,9 @@ public class NodeManager : MonoBehaviour
         int a_connectionAmount,
         float a_yLimit,
         NodeContainer nodeContainer,
-        GameObject a_walkableObject)
+        GameObject a_walkableObject,
+        int walkLayer,
+        int unwalkLayer)
     {
         m_nodeDistance = a_nodeDistance;
         m_nodeConnectionAmount = a_connectionAmount;
@@ -70,6 +75,8 @@ public class NodeManager : MonoBehaviour
 
         nodeScriptableObject = nodeContainer;
         walkableObject = a_walkableObject;
+        walkableLayer = walkLayer;
+        unwalkableLayer = unwalkLayer;
     }
 
     public static void CreateNodes(int a_layerMask)
@@ -125,7 +132,7 @@ public class NodeManager : MonoBehaviour
                 continue;
             
             //if its on the obstacle layer add to unwalkable
-            if (currentObject.layer == 11)
+            if (currentObject.layer == unwalkableLayer)
             {
                 bool canAdd = true;
                 List<Vector3> objectVerts = new List<Vector3>();
@@ -156,7 +163,7 @@ public class NodeManager : MonoBehaviour
                 continue;
             }
             //if its layer 12 then we know its walkable
-            if (currentObject.layer == 12)
+            if (currentObject.layer == walkableLayer)
             {
                 Vector3 newNormal = currentObject.transform.TransformDirection(new Vector3(0, 1, 0));
                 List<Vector3> objectVerts = new List<Vector3>();

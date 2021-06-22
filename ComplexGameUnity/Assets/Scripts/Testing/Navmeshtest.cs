@@ -13,11 +13,11 @@ public class Navmeshtest : MonoBehaviour
     {
         if (agent.hasPath == false)
         {
-            agent.SetDestination(new Vector3(Random.Range(-50.0f, 50.0f), 0, Random.Range(-50.0f, 50.0f)));
+            agent.SetDestination(new Vector3(Random.Range(-45.0f, 45.0f), 0, Random.Range(-45.0f, 45.0f)));
         }
         if (agent.remainingDistance < 3f)
         {
-            agent.SetDestination(new Vector3(Random.Range(-50.0f, 50.0f), 0, Random.Range(-50.0f, 50.0f)));
+            agent.SetDestination(new Vector3(Random.Range(-45.0f, 45.0f), 0, Random.Range(-45.0f, 45.0f)));
         }
     }
 }
