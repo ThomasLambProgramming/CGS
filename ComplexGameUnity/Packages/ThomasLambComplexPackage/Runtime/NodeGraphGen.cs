@@ -52,7 +52,7 @@ public class NodeManager : MonoBehaviour
     public static int m_nodeConnectionAmount = 50000;
     public static float m_ySpaceLimit = 1;
 
-    private static int walkableLayer = 0;
+    public static int walkableLayer = 0;
     private static int unwalkableLayer = 0;
     
     
@@ -178,6 +178,10 @@ public class NodeManager : MonoBehaviour
                     NodeCheck node = new NodeCheck();
                     node.position = currentObject.transform.TransformPoint(vert);
                     node.normal = newNormal;
+                    if (currentObject.transform.CompareTag("Ground"))
+                    {
+                        node.normal = new Vector3(0, 1, 0);
+                    }
                     foreach (var VARIABLE in objectVerts)
                     {
                         if (Vector3.Distance(VARIABLE, node.position) < 0.3f)
@@ -317,7 +321,7 @@ public class NodeManager : MonoBehaviour
                 //direction and the normal negated to see if its ok to delete
                 //then remove
                 Vector3 alphaToBetaDir = Vector3.Normalize(nodeBeta.position - nodeAlpha.position);
-                if (Vector3.Dot(-nodeAlpha.normal, alphaToBetaDir) > 0.9f &&
+                if (Vector3.Dot(-nodeAlpha.normal, alphaToBetaDir) > 0.7f &&
                     Mathf.Abs(nodeAlpha.position.y - nodeBeta.position.y) <= m_ySpaceLimit)
                 {
                     if (nodeAlpha.position.y > nodeBeta.position.y)

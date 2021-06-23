@@ -112,7 +112,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 84
+  m_Constraints: 80
   m_CollisionDetection: 0
 --- !u!114 &3319972559108108574
 MonoBehaviour:
@@ -128,9 +128,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 15
   stoppingSpeed: 5
-  goNextDist: 20
+  goNextDist: 5
   seeAheadDistance: 10
   maxAvoidForce: 40
+  debugMode: 1
+  avoidance: 1
   pathData: {fileID: 11400000, guid: d897576bd2bf6d54c99fd6003d5a5260, type: 2}
+  walkableLayer: 8388608
   hasBeenAdjusted: 0
   rb: {fileID: 0}

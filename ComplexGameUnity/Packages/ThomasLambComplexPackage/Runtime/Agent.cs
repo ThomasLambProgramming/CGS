@@ -15,6 +15,7 @@ public class Agent : MonoBehaviour
     public bool avoidance = false;
     public NodeContainer pathData = null;
 
+    public int walkableLayer = 1 << 23;
     //since its an array we need the index
     int currentIndex = 0;
     public bool hasBeenAdjusted = false;
@@ -48,10 +49,19 @@ public class Agent : MonoBehaviour
             Vector3 direction = path[currentIndex] - transform.position;
             direction.y = 0;
             direction.Normalize();
+            Vector3 yCheckDirection = new Vector3(direction.x, -2, direction.z);
             direction *= moveSpeed;
 
             rb.velocity += direction;
-
+            
+            RaycastHit yCheck;
+            if (Physics.Raycast(transform.position, yCheckDirection, out yCheck, 5))
+            {
+                if (yCheck.transform.CompareTag("Ground"))
+                {
+                    transform.position = new Vector3(transform.position.x, yCheck.point.y + 1.2f, transform.position.z);
+                }
+            }
             if (avoidance)
             {
                 RaycastHit hit;
