@@ -1,0 +1,9 @@
+{
+  "name": "com.unity.complex.node",
+  "version": "1.1.0",
+  "displayName": "Complex",
+  "description": "Thomas Lamb complex package",
+  "unity": "2020.1",
+  "hideInEditor": false,
+  "type": "tool"
+}

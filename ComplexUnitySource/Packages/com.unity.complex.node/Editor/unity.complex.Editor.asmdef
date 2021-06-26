@@ -1,0 +1,16 @@
+{
+    "name": "unity.complex.Editor",
+    "rootNamespace": "",
+    "references": [
+        "complex.node.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
